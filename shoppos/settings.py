@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -53,6 +54,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "apps.core.middleware.LoginRequiredMiddleware",
+    "apps.core.middleware.DailyBackupMiddleware",
 ]
 
 ROOT_URLCONF = "shoppos.urls"
@@ -96,6 +98,7 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = DATA_DIR / "staticfiles"
+STATIC_ROOT.mkdir(exist_ok=True)
 MEDIA_URL = "media/"
 MEDIA_ROOT = DATA_DIR / "media"
 
@@ -106,3 +109,21 @@ LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 20000
+
+# Take the evening backup automatically while the POS is in use.
+AUTO_BACKUP = os.environ.get("SHOPPOS_AUTO_BACKUP", "1") == "1"
+
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "file": {"class": "logging.FileHandler", "filename": DATA_DIR / "shoppos.log", "level": "WARNING"},
+        "console": {"class": "logging.StreamHandler", "level": "INFO"},
+    },
+    "root": {"handlers": ["file", "console"], "level": "INFO"},
+}

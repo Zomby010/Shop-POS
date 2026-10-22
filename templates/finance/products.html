@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Best and slow sellers{% endblock %}
+{% block content %}
+{% include "finance/_nav.html" %}
+<h1>Best and slow sellers</h1>
+{% include "finance/_range.html" %}
+<div class="grid">
+  <div class="panel"><h2 style="margin-top:0">Best sellers (by revenue)</h2>
+    <table><tr><th>Product</th><th class="num">Sold</th><th class="num">Revenue</th><th class="num">Profit</th></tr>
+    {% for r in best %}<tr><td>{{ r.product.name }}</td><td class="num">{{ r.quantity|qty }} {{ r.product.unit }}</td><td class="num">{{ r.revenue|money }}</td><td class="num">{{ r.profit|money }}</td></tr>
+    {% empty %}<tr><td colspan="4" class="muted">No sales in this period.</td></tr>{% endfor %}</table>
+  </div>
+  <div class="panel"><h2 style="margin-top:0">Slow sellers</h2>
+    <table><tr><th>Product</th><th class="num">Sold</th><th class="num">Revenue</th><th class="num">In stock</th></tr>
+    {% for r in slow %}<tr><td>{{ r.product.name }}</td><td class="num">{{ r.quantity|qty }} {{ r.product.unit }}</td><td class="num">{{ r.revenue|money }}</td><td class="num">{{ r.product.stock_qty|qty }} {{ r.product.unit }}</td></tr>{% endfor %}</table>
+  </div>
+</div>
+<p class="muted small">The Excel export lists every product with quantity sold, revenue and gross profit.</p>
+{% endblock %}

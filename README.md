@@ -11,7 +11,41 @@ Built with Python and Django on SQLite. The full specification is in [docs/build
 | 1. Foundation | Data model, roles and logins, settings page, products with kg/litre units, bulk price tiers, quick-sale buttons, Excel import and export, admin, demo data | Done |
 | 2. Sell screen | Scanning, quick-sale panel, payments, receipts, holds, voids, cash-up, deni customers | Done |
 | 3. Stock and suppliers | Purchases, recounts, stock takes, loss tracking, suppliers, invoices and quotations | Done |
-| 4. Money and reports | Expenses, profit, reports, backups, Windows launcher | Next |
+| 4. Money and reports | Expenses, profit, reports, backups, Windows launcher | Done |
+
+## Owner's guide: setting up the shop laptop
+
+1. Install **Python 3.12 or newer** from [python.org](https://www.python.org/downloads/). On the first installer screen tick **Add python.exe to PATH**.
+2. Copy the Shop POS folder to the laptop (for example `C:\ShopPOS`).
+3. Double-click **`start_pos.bat`**. The first time, it needs the internet for a few minutes to install its libraries, then asks you to create the owner's username, password and PIN.
+4. The browser opens at http://localhost:8000. Keep the black window open while the shop is open; closing it stops the POS. Put a shortcut to `start_pos.bat` on the desktop.
+
+After that the POS works fully offline.
+
+**First things to do as the owner**
+
+1. **Settings:** business name, logo, phone, KRA PIN and receipt footer. Choose the receipt printer and its paper width (58 or 80 mm), then press **Save and print test receipt**. Set a backup folder on a USB stick or a OneDrive/Google Drive folder.
+2. **Settings → Users and PINs:** add a login for each cashier.
+3. **Settings → Quick-sale categories:** add Rice, Beans, Cooking oil and so on.
+4. **Products → Import from Excel:** download the template, fill in your products, upload, check the preview and import. Loose goods use Sold by = Weight or Volume and list their buttons, e.g. `1/4 kg; 1/2 kg; 1 kg` or `KSh 50; KSh 100; 1/2 L`.
+5. Start selling from **Sell**.
+
+**Every day**
+
+- Cashiers sell from **Sell** and do a **Cash-up** at the end of each shift.
+- Receive deliveries in **Stock → Receive stock**; record spillage in **Stock → Loss and wastage**.
+- Check **Money & reports** for today's profit, and **Products** for the low-stock badge.
+- From 6 pm the POS backs itself up automatically. You can also press **Back up now** under Money & reports → Backup.
+
+**Receipt printer connection**
+
+| Printer type | Settings → Connection | Address |
+| --- | --- | --- |
+| USB thermal printer installed in Windows | Windows printer name | The printer's name as shown in Windows Settings → Printers |
+| Network/Wi-Fi printer | Network | Its IP address, e.g. `192.168.1.50` |
+| USB printer without a Windows driver | USB | Vendor and product id, e.g. `0x0416:0x5011` |
+
+If a receipt fails to print, the sale is still saved. Use **Print receipt** to try again, or **Print from browser**.
 
 ## Run it for development
 
@@ -35,7 +69,7 @@ Change these passwords in Settings → Users before real use. For a clean shop w
 
 Shop data (database, logo, secret key) lives in the `data/` folder, which is not part of the code. Set `SHOPPOS_DATA_DIR` to keep it elsewhere.
 
-Run the tests with `pytest`.
+Run the tests with `pytest`. `python serve.py` runs the same production server that `start_pos.bat` uses (waitress, on port 8000).
 
 ## How things work
 
@@ -96,6 +130,17 @@ Stock in the top bar (owners and stock clerks).
 - **Suppliers** (Customers & suppliers → Suppliers): add, edit and deactivate suppliers, and see each one's purchase history.
 - **Invoices and quotations** (owner): prepare them for a customer, a supplier or a one-off name. Tick **Bulk order** and product lines with a blank price take the bulk tier price for their quantity. Lines can also be free text (delivery, services).
 - Each document is numbered (INV-0001, QUO-0001) and opens as a PDF with the business name and logo from Settings, ready to print, save or send. A quotation converts into an invoice in one click, and invoices track payments (draft, sent, partly paid, paid).
+
+### Money and reports
+
+Owner only, under **Money & reports**. Every report has a date range and an **Export to Excel** button.
+
+- **Profit:** net sales (after refunds), cost of goods sold at the cost when each item was sold, gross profit and margin, expenses, stock loss (wastage plus count differences) and net profit, by day and in total.
+- **Sales report:** sales per day split into cash, M-Pesa and deni, with refunds and voids.
+- **Best and slow sellers:** by revenue for the period, with quantity and gross profit; the Excel file lists every product.
+- **Stock value:** stock at cost and at selling price by category.
+- **Expenses:** rent, electricity, transport, wages and so on. Cash expenses from the drawer come off the expected cash at cash-up.
+- **Backup:** run a backup now, download past ones, and restore instructions. Backups are zip files with the database and logo; the last 30 (configurable) are kept.
 
 ## Project layout
 

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Sales report{% endblock %}
+{% block content %}
+{% include "finance/_nav.html" %}
+<h1>Sales by payment method</h1>
+{% include "finance/_range.html" %}
+<table>
+  <tr><th>Day</th><th class="num">Sales</th><th class="num">Total</th><th class="num">Cash</th><th class="num">M-Pesa</th><th class="num">Deni</th><th class="num">Refunds</th><th class="num">Net</th></tr>
+  {% for d in rows %}
+  <tr><td>{{ d.day|date:"D d M" }}</td><td class="num">{{ d.count }}{% if d.voided %} <span class="badge danger" title="voided">{{ d.voided }} void</span>{% endif %}</td><td class="num">{{ d.total|money }}</td><td class="num">{{ d.cash|money }}</td><td class="num">{{ d.mpesa|money }}</td><td class="num">{{ d.credit|money }}</td><td class="num">{{ d.refunds|money }}</td><td class="num">{{ d.net|money }}</td></tr>
+  {% endfor %}
+  <tr><th>Total</th><th class="num">{{ total.count }}</th><th class="num">{{ total.total|money }}</th><th class="num">{{ total.cash|money }}</th><th class="num">{{ total.mpesa|money }}</th><th class="num">{{ total.credit|money }}</th><th class="num">{{ total.refunds|money }}</th><th class="num">{{ total.net|money }}</th></tr>
+</table>
+<p class="muted small">Totals include sales later voided; their reversal shows under Refunds. Deni is goods given on credit; repayments show in customers' histories and in cash-ups.</p>
+{% endblock %}

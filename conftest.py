@@ -11,6 +11,8 @@ from apps.core.roles import CASHIER, OWNER, STOCK_CLERK, ensure_groups
 @pytest.fixture(autouse=True)
 def _media(settings, tmp_path):
     settings.MEDIA_ROOT = tmp_path / "media"
+    settings.DATA_DIR = tmp_path / "data"
+    settings.AUTO_BACKUP = False
 
 
 def _make_user(django_user_model, username, role, pin=None):
