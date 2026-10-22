@@ -1,0 +1,10 @@
+{% load shop_tags %}
+<table>
+  <tr><th>When</th><th>Product</th><th>Type</th><th class="num">Quantity</th><th class="num">Unit cost</th><th>By</th><th>Reason / ref</th></tr>
+  {% for m in movements %}
+  <tr><td>{{ m.created_at|date:"d M H:i" }}</td><td>{{ m.product.name }}</td><td>{{ m.get_kind_display }}</td>
+    <td class="num">{% if m.quantity > 0 %}+{% endif %}{{ m.quantity|qty }} {{ m.product.unit }}</td><td class="num">{{ m.unit_cost|money }}</td>
+    <td>{{ m.user|default:"" }}</td><td>{{ m.reason }} {{ m.reference }}</td></tr>
+  {% empty %}<tr><td colspan="7" class="muted">No movements.</td></tr>
+  {% endfor %}
+</table>

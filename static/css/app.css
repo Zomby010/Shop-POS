@@ -65,3 +65,7 @@ form.stacked input[type=checkbox] { align-self: flex-start; }
 .pill { background: var(--brand-soft); color: var(--brand); padding: .1rem .5rem; border-radius: 999px; font-size: .8rem; }
 .row-error td { background: var(--danger-soft); }
 @media print { .topbar, .no-print { display: none !important; } main { padding: 0; } }
+[hidden] { display: none !important; }
+td > input:not([type=checkbox]):not([type=radio]), td > select { width: 100%; min-width: 4.5rem; }
+.cart-table td > input.qty-input { width: 5.5rem; min-width: 0; }
+.table-wrap { overflow-x: auto; }

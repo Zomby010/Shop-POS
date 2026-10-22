@@ -10,8 +10,8 @@ Built with Python and Django on SQLite. The full specification is in [docs/build
 | --- | --- | --- |
 | 1. Foundation | Data model, roles and logins, settings page, products with kg/litre units, bulk price tiers, quick-sale buttons, Excel import and export, admin, demo data | Done |
 | 2. Sell screen | Scanning, quick-sale panel, payments, receipts, holds, voids, cash-up, deni customers | Done |
-| 3. Stock and suppliers | Purchases, recounts, stock takes, loss tracking, suppliers, invoices and quotations | Next |
-| 4. Money and reports | Expenses, profit, reports, backups, Windows launcher | |
+| 3. Stock and suppliers | Purchases, recounts, stock takes, loss tracking, suppliers, invoices and quotations | Done |
+| 4. Money and reports | Expenses, profit, reports, backups, Windows launcher | Next |
 
 ## Run it for development
 
@@ -79,6 +79,23 @@ The sell screen (Sell in the top bar) is built for speed and works with the keyb
 - **Removing or reducing a line** needs the owner's PIN unless the owner is logged in. Refunds and voids (Sell → Today's sales → Refund or void) also need the PIN and a reason, and are written to the audit log.
 - **Receipts** print to the thermal printer set in Settings (USB, network or Windows printer name; 58 or 80 mm). If the printer fails, the sale is still saved and the receipt can be printed again or from the browser.
 - **Cash-up** (Sell → Cash-up) compares the drawer and M-Pesa with what was recorded since the cashier's last cash-up: cash sales, minus cash refunds, plus deni repaid in cash, minus expenses paid from the drawer.
+
+### Stock
+
+Stock in the top bar (owners and stock clerks).
+
+- **Receive stock:** pick the supplier and add items in packs. "2 sacks × 50 kg at KSh 9,000" adds 100 kg at KSh 180/kg and updates the average cost.
+- **Recount:** search a few products and type what you counted.
+- **Stock take:** start one for the whole shop or one category. The system notes what it expects; you type counts as you go and save often. Selling can continue. When the owner approves, only the differences found are posted, so sales made during counting are kept.
+- **Loss and wastage:** record spillage, scooping loss, expiry or damage with a reason.
+- **Loose-goods loss report** (owner): for rice, beans, oil and other weighed goods, expected against counted kg/L over approved stock takes, plus recorded losses, as a share of what was sold.
+- **Low stock:** products at or below their alert level show on the dashboard, the Stock page and as a badge on Products.
+
+### Suppliers, invoices and quotations
+
+- **Suppliers** (Customers & suppliers → Suppliers): add, edit and deactivate suppliers, and see each one's purchase history.
+- **Invoices and quotations** (owner): prepare them for a customer, a supplier or a one-off name. Tick **Bulk order** and product lines with a blank price take the bulk tier price for their quantity. Lines can also be free text (delivery, services).
+- Each document is numbered (INV-0001, QUO-0001) and opens as a PDF with the business name and logo from Settings, ready to print, save or send. A quotation converts into an invoice in one click, and invoices track payments (draft, sent, partly paid, paid).
 
 ## Project layout
 

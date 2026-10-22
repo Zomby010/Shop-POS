@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}{% if document %}Edit {{ document.code }}{% else %}New {{ form.kind.value }}{% endif %}{% endblock %}
+{% block content %}
+<h1>{% if document %}Edit {{ document.code }}{% else %}New {{ form.kind.value|default:"invoice" }}{% endif %}</h1>
+<form method="post" class="stacked" id="doc-form">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="panel form-grid">
+    <p>{{ form.kind.label_tag }}{{ form.kind }}</p>
+    <p>{{ form.party_type.label_tag }}{{ form.party_type }}</p>
+    <p data-party="customer">{{ form.customer.label_tag }}{{ form.customer }}{{ form.customer.errors }}<a class="small" href="{% url 'partners:customer_new' %}" target="_blank">Add customer</a></p>
+    <p data-party="supplier">{{ form.supplier.label_tag }}{{ form.supplier }}{{ form.supplier.errors }}<a class="small" href="{% url 'partners:supplier_new' %}" target="_blank">Add supplier</a></p>
+    <p data-party="other">{{ form.party_name.label_tag }}{{ form.party_name }}{{ form.party_name.errors }}</p>
+    <p data-party="other">{{ form.party_details.label_tag }}{{ form.party_details }}</p>
+    <p>{{ form.date.label_tag }}{{ form.date }}</p>
+    <p data-kind="quotation">{{ form.valid_until.label_tag }}{{ form.valid_until }}</p>
+    <p data-kind="invoice">{{ form.due_date.label_tag }}{{ form.due_date }}</p>
+    <p>{{ form.status.label_tag }}{{ form.status }}</p>
+    <p>{{ form.discount.label_tag }}{{ form.discount }}{{ form.discount.errors }}</p>
+    <p><label>{{ form.is_bulk }} {{ form.is_bulk.label }}</label><span class="helptext">Product lines with a blank price get the bulk tier price for their quantity.</span></p>
+  </div>
+  <div class="panel">
+    <h2 style="margin-top:0">Items</h2>
+    {{ formset.management_form }}{{ formset.non_form_errors }}
+    <table id="doc-lines">
+      <tr><th>Product (optional)</th><th>Description</th><th>Qty</th><th>Unit</th><th>Unit price</th><th class="num">Amount</th><th>Remove</th></tr>
+      {% for f in formset %}
+      <tr class="dl-row">{% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+        <td>{{ f.product }}</td><td>{{ f.description }}{{ f.description.errors }}</td><td>{{ f.quantity }}{{ f.quantity.errors }}</td>
+        <td>{{ f.unit }}</td><td>{{ f.unit_price }}{{ f.unit_price.errors }}</td><td class="num dl-amount"></td><td>{% if f.instance.pk %}{{ f.DELETE }}{% endif %}</td></tr>
+      {% endfor %}
+      <tr><th colspan="5" class="num">Subtotal</th><th class="num" id="dl-subtotal"></th><th></th></tr>
+    </table>
+    <p class="muted small">Need more rows? Save and edit again; four empty rows are added each time.</p>
+  </div>
+  <div class="panel"><p>{{ form.notes.label_tag }}{{ form.notes }}</p></div>
+  <div class="toolbar"><button class="btn primary big">Save</button><a class="btn" href="{% if document %}{% url 'documents:detail' document.pk %}{% else %}{% url 'documents:list' %}{% endif %}">Cancel</a></div>
+</form>
+<script id="product-data" type="application/json">{
+{% for p in products %}"{{ p.pk }}": {"name": "{{ p.name|escapejs }}", "unit": "{{ p.unit }}", "price": {{ p.selling_price }}, "tiers": [{% for t in p.tiers.all %}[{{ t.min_qty }}, {{ t.unit_price }}]{% if not forloop.last %},{% endif %}{% endfor %}]}{% if not forloop.last %},{% endif %}
+{% endfor %}}</script>
+{% endblock %}
+{% block scripts %}<script>
+(function () {
+  const products = JSON.parse(document.getElementById("product-data").textContent);
+  const form = document.getElementById("doc-form");
+  const field = (row, name) => row.querySelector(`[name$="-${name}"]`);
+  const bulk = () => form.querySelector('[name="is_bulk"]').checked;
+  function priceFor(p, qty) {
+    let price = p.price;
+    if (bulk()) for (const [min, tierPrice] of p.tiers) if (qty >= min) price = tierPrice;
+    return price;
+  }
+  function showParty() {
+    const type = form.querySelector('[name="party_type"]').value;
+    const kind = form.querySelector('[name="kind"]').value;
+    form.querySelectorAll("[data-party]").forEach((el) => (el.hidden = el.dataset.party !== type));
+    form.querySelectorAll("[data-kind]").forEach((el) => (el.hidden = el.dataset.kind !== kind));
+  }
+  function update(e) {
+    let subtotal = 0;
+    form.querySelectorAll(".dl-row").forEach((row) => {
+      const product = products[field(row, "product").value];
+      const qty = parseFloat(field(row, "quantity").value) || 0;
+      if (product && e && (e.target === field(row, "product") || e.target === field(row, "quantity") || e.target.name === "is_bulk")) {
+        if (!field(row, "description").value || e.target === field(row, "product")) field(row, "description").value = product.name;
+        field(row, "unit").value = product.unit;
+        if (qty) field(row, "unit_price").value = priceFor(product, qty).toFixed(2);
+      }
+      const amount = qty * (parseFloat(field(row, "unit_price").value) || 0);
+      row.querySelector(".dl-amount").textContent = amount ? amount.toFixed(2) : "";
+      subtotal += amount;
+    });
+    document.getElementById("dl-subtotal").textContent = subtotal.toFixed(2);
+  }
+  form.addEventListener("change", (e) => { showParty(); update(e); });
+  form.addEventListener("input", (e) => update(e.target.name.endsWith("unit_price") ? null : e));
+  showParty(); update();
+})();
+</script>{% endblock %}

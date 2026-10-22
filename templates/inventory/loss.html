@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Loss and wastage{% endblock %}
+{% block content %}
+{% include "inventory/_nav.html" with tab="loss" %}
+<h1>Record loss or wastage</h1>
+<form method="post" class="panel stacked">
+  {% csrf_token %}
+  <div class="form-grid">{% for f in form %}<p>{{ f.label_tag }}{{ f }}{{ f.errors }}</p>{% endfor %}</div>
+  <button class="btn primary">Record loss</button>
+</form>
+<h2>Recent losses</h2>
+{% include "inventory/_movements.html" with movements=recent %}
+{% endblock %}

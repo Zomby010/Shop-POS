@@ -1,0 +1,10 @@
+<div class="toolbar">
+  <a class="btn {% if tab == 'home' %}primary{% endif %}" href="{% url 'inventory:home' %}">Overview</a>
+  <a class="btn {% if tab == 'purchases' %}primary{% endif %}" href="{% url 'inventory:purchase_list' %}">Purchases</a>
+  <a class="btn {% if tab == 'recount' %}primary{% endif %}" href="{% url 'inventory:recount' %}">Recount</a>
+  <a class="btn {% if tab == 'stocktakes' %}primary{% endif %}" href="{% url 'inventory:stocktakes' %}">Stock takes</a>
+  <a class="btn {% if tab == 'loss' %}primary{% endif %}" href="{% url 'inventory:loss' %}">Loss and wastage</a>
+  <a class="btn {% if tab == 'movements' %}primary{% endif %}" href="{% url 'inventory:movements' %}">Movements</a>
+  {% if is_owner %}<a class="btn {% if tab == 'loss_report' %}primary{% endif %}" href="{% url 'inventory:loss_report' %}">Loose-goods loss report</a>{% endif %}
+  <a class="btn" href="{% url 'partners:supplier_list' %}">Suppliers</a>
+</div>

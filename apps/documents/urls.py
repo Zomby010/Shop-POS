@@ -1,10 +1,14 @@
 from django.urls import path
 
-from apps.core.stubs import coming_soon
+from . import views
 
 app_name = "documents"
 urlpatterns = [
-    path("", coming_soon("Invoices and quotations"), name="list"),
-    path("new/", coming_soon("New document"), name="new"),
-    path("<int:pk>/", coming_soon("Document"), name="detail"),
+    path("", views.document_list, name="list"),
+    path("new/", views.document_edit, name="new"),
+    path("<int:pk>/", views.document_detail, name="detail"),
+    path("<int:pk>/edit/", views.document_edit, name="edit"),
+    path("<int:pk>/pdf/", views.document_pdf, name="pdf"),
+    path("<int:pk>/convert/", views.convert, name="convert"),
+    path("<int:pk>/status/", views.set_status, name="status"),
 ]

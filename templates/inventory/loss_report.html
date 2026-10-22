@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Loose-goods loss report{% endblock %}
+{% block content %}
+{% include "inventory/_nav.html" with tab="loss_report" %}
+<h1>Loose-goods loss report</h1>
+<p class="muted">For goods sold by kg or litre: what the system expected at each approved stock take against what was counted, plus losses recorded by hand. Big shortfalls point to heavy scooping, spillage or theft.</p>
+<form class="toolbar" method="get">
+  <label>From <input type="date" name="start" value="{{ start }}"></label>
+  <label>To <input type="date" name="end" value="{{ end }}"></label>
+  <button class="btn">Show</button>
+</form>
+<table>
+  <tr><th>Product</th><th class="num">Stock takes</th><th class="num">Expected</th><th class="num">Counted</th><th class="num">Variance</th><th class="num">Variance %</th><th class="num">Variance KSh</th><th class="num">Recorded losses</th><th class="num">Sold</th><th class="num">Total loss as % of sold</th></tr>
+  {% for r in rows %}
+  <tr class="{% if r.variance < 0 %}low{% endif %}">
+    <td>{{ r.product.name }}</td><td class="num">{{ r.stocktakes }}</td>
+    <td class="num">{{ r.expected|qty }} {{ r.product.unit }}</td><td class="num">{{ r.counted|qty }} {{ r.product.unit }}</td>
+    <td class="num">{{ r.variance|qty }} {{ r.product.unit }}</td><td class="num">{{ r.variance_pct|floatformat:1 }}%</td>
+    <td class="num">{{ r.variance_value|money }}</td>
+    <td class="num">{{ r.recorded_losses|qty }} {{ r.product.unit }} ({{ r.recorded_loss_value|money }})</td>
+    <td class="num">{{ r.sold|qty }} {{ r.product.unit }}</td><td class="num">{{ r.loss_pct_of_sales|floatformat:1 }}%</td>
+  </tr>
+  {% empty %}<tr><td colspan="10" class="muted">No loose-goods data yet. Approve a stock take to see results.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

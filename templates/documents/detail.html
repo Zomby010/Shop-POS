@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}{{ document.code }}{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <h1 style="margin:0">{{ document.get_kind_display }} {{ document.code }}</h1>
+  <span class="badge {% if document.status == 'paid' %}ok{% elif document.status == 'draft' %}muted{% else %}warn{% endif %}">{{ document.get_status_display }}</span>
+  {% if document.is_bulk %}<span class="badge ok">bulk</span>{% endif %}
+  <span class="spacer"></span>
+  <a class="btn primary" href="{% url 'documents:pdf' document.pk %}" target="_blank">Open PDF</a>
+  <a class="btn" href="{% url 'documents:pdf' document.pk %}?download=1">Download PDF</a>
+  <a class="btn" href="{% url 'documents:edit' document.pk %}">Edit</a>
+  {% if document.kind == "quotation" and document.status != "converted" %}
+  <form method="post" action="{% url 'documents:convert' document.pk %}">{% csrf_token %}<button class="btn">Convert to invoice</button></form>
+  {% endif %}
+</div>
+<div class="grid">
+  <div class="panel">
+    <p class="muted small">{% if document.kind == "quotation" %}Quotation for{% else %}Bill to{% endif %} ({{ document.get_party_type_display|lower }})</p>
+    <p><strong>{{ document.party_display }}</strong>{% if document.party_details %}<br>{{ document.party_details }}{% endif %}</p>
+    <p>Date {{ document.date }}{% if document.valid_until %} · valid until {{ document.valid_until }}{% endif %}{% if document.due_date %} · due {{ document.due_date }}{% endif %}</p>
+    {% if document.converted_from %}<p>From quotation <a href="{% url 'documents:detail' document.converted_from.pk %}">{{ document.converted_from.code }}</a></p>{% endif %}
+    {% if document.status == "converted" %}<p>Converted to <a href="{% url 'documents:detail' document.converted_to.pk %}">{{ document.converted_to.code }}</a></p>{% endif %}
+  </div>
+  <div class="panel">
+    <form method="post" action="{% url 'documents:status' document.pk %}" class="toolbar">{% csrf_token %}
+      <label>Status <select name="status">{% for value, label in document.Status.choices %}<option value="{{ value }}" {% if value == document.status %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      <button class="btn small">Update</button>
+    </form>
+    {% if document.kind == "invoice" %}
+    <p>Paid {{ document.amount_paid|money }} · balance <strong>{{ document.balance_due|money }}</strong></p>
+    <form method="post" class="toolbar">{% csrf_token %}{{ payment_form.amount }}<button class="btn small">Record payment</button></form>
+    {% endif %}
+  </div>
+</div>
+<table>
+  <tr><th>Description</th><th class="num">Qty</th><th>Unit</th><th class="num">Unit price</th><th class="num">Amount</th></tr>
+  {% for l in lines %}<tr><td>{{ l.description }}</td><td class="num">{{ l.quantity|qty }}</td><td>{{ l.unit }}</td><td class="num">{{ l.unit_price|money }}</td><td class="num">{{ l.line_total|money }}</td></tr>{% endfor %}
+  <tr><th colspan="4" class="num">Subtotal</th><th class="num">{{ document.subtotal|money }}</th></tr>
+  {% if document.discount %}<tr><th colspan="4" class="num">Discount</th><th class="num">−{{ document.discount|money }}</th></tr>{% endif %}
+  <tr><th colspan="4" class="num">Total (KSh)</th><th class="num">{{ document.total|money }}</th></tr>
+</table>
+{% if document.notes %}<div class="panel" style="margin-top:1rem">{{ document.notes|linebreaksbr }}</div>{% endif %}
+{% endblock %}

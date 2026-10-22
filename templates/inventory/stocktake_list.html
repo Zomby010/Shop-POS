@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Stock takes{% endblock %}
+{% block content %}
+{% include "inventory/_nav.html" with tab="stocktakes" %}
+<h1>Stock takes</h1>
+<form method="post" class="panel stacked">
+  {% csrf_token %}
+  <h2 style="margin-top:0">Start a stock take</h2>
+  <p class="muted small">The system notes what it expects for every product now. You enter what you count. Sales can carry on while you count; only the difference found is posted when the owner approves.</p>
+  <div class="form-grid">{% for f in form %}<p>{{ f.label_tag }}{{ f }}{% if f.help_text %}<span class="helptext">{{ f.help_text }}</span>{% endif %}</p>{% endfor %}</div>
+  <button class="btn primary">Start counting</button>
+</form>
+<table>
+  <tr><th>Stock take</th><th>Status</th><th>Started</th><th>By</th><th>Approved</th><th class="num">Products</th></tr>
+  {% for t in takes %}
+  <tr><td><a href="{% url 'inventory:stocktake' t.pk %}">{{ t }}</a>{% if t.note %} <span class="muted small">{{ t.note }}</span>{% endif %}</td><td>{{ t.get_status_display }}</td><td>{{ t.started_at|date:"d M Y H:i" }}</td><td>{{ t.started_by|default:"" }}</td><td>{{ t.approved_at|date:"d M Y H:i" }} {{ t.approved_by|default:"" }}</td><td class="num">{{ t.line_count }}</td></tr>
+  {% empty %}<tr><td colspan="6" class="muted">No stock takes yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

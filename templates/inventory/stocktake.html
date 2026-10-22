@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}{{ take }}{% endblock %}
+{% block content %}
+{% include "inventory/_nav.html" with tab="stocktakes" %}
+<div class="toolbar">
+  <h1 style="margin:0">{{ take }}</h1><span class="badge {% if take.status == 'open' %}warn{% elif take.status == 'approved' %}ok{% else %}muted{% endif %}">{{ take.get_status_display }}</span>
+  <span class="muted">{{ counted_count }} of {{ total_count }} counted · variance KSh {{ variance_value|money }}</span>
+  <span class="spacer"></span>
+  {% if take.status == "open" %}
+    {% if is_owner %}<form method="post" action="{% url 'inventory:stocktake_approve' take.pk %}" onsubmit="return confirm('Post the differences to stock? Uncounted products are left as they are.')">{% csrf_token %}<button class="btn primary">Approve and update stock</button></form>{% endif %}
+    <form method="post" action="{% url 'inventory:stocktake_cancel' take.pk %}" onsubmit="return confirm('Cancel this stock take?')">{% csrf_token %}<button class="btn">Cancel</button></form>
+  {% endif %}
+</div>
+<form class="toolbar" method="get">
+  <select name="category"><option value="">All categories</option>{% for c in categories %}<option value="{{ c.pk }}" {% if category == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+  <label class="small"><input type="checkbox" name="uncounted" value="1" {% if request.GET.uncounted %}checked{% endif %}> Not counted yet</label>
+  <button class="btn">Show</button>
+</form>
+<form method="post">
+  {% csrf_token %}
+  <table>
+    <tr><th>Product</th><th>Category</th><th class="num">Expected</th><th>Counted</th><th class="num">Variance</th><th class="num">Variance KSh</th></tr>
+    {% for l in lines %}
+    <tr class="{% if l.counted_qty is not None and l.variance < 0 %}low{% endif %}">
+      <td>{{ l.product.name }}</td><td>{{ l.product.category|default:"" }}</td>
+      <td class="num">{{ l.expected_qty|qty }} {{ l.product.unit }}</td>
+      <td>{% if take.status == "open" %}<input name="count_{{ l.pk }}" value="{% if l.counted_qty is not None %}{{ l.counted_qty|qty }}{% endif %}" inputmode="decimal" size="8">{% else %}{{ l.counted_qty|qty|default:"–" }}{% endif %} {{ l.product.unit }}</td>
+      <td class="num">{% if l.counted_qty is not None %}{{ l.variance|qty }}{% endif %}</td>
+      <td class="num">{% if l.counted_qty is not None %}{{ l.variance_value|money }}{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% if take.status == "open" %}<div class="toolbar" style="margin-top:1rem"><button class="btn primary big">Save counts</button><span class="muted small">Save often. Blank means not counted yet.</span></div>{% endif %}
+</form>
+{% endblock %}
