@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{% if instance %}Edit {{ instance.username }}{% else %}Add user{% endif %}{% endblock %}
+{% block content %}
+<h1>{% if instance %}Edit {{ instance.username }}{% else %}Add user{% endif %}</h1>
+<form method="post" class="stacked panel" style="max-width:520px">
+  {% csrf_token %}
+  {% for f in form %}
+  <p>{{ f.label_tag }}{{ f }}{% if f.help_text %}<span class="helptext">{{ f.help_text }}</span>{% endif %}{{ f.errors }}</p>
+  {% endfor %}
+  <div class="toolbar"><button class="btn primary" type="submit">Save</button><a class="btn" href="{% url 'user_list' %}">Cancel</a></div>
+</form>
+{% endblock %}

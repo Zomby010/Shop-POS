@@ -1,0 +1,40 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ shop.business_name }}{% endblock %} · Shop POS</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  {% block head %}{% endblock %}
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+{% if user.is_authenticated %}
+<header class="topbar">
+  <a class="brand" href="{% url 'dashboard' %}">{% if shop.logo %}<img src="{{ shop.logo.url }}" alt="">{% endif %}{{ shop.business_name }}</a>
+  <nav>
+    {% with s=request.resolver_match.namespace %}
+    {% if can_sell %}<a href="{% url 'sales:sell' %}" class="{% if s == 'sales' %}active{% endif %}">Sell</a>{% endif %}
+    <a href="{% url 'catalog:product_list' %}" class="{% if s == 'catalog' %}active{% endif %}">Products{% if low_stock_count %} <span class="badge warn" title="Low stock">{{ low_stock_count }}</span>{% endif %}</a>
+    {% if can_stock %}<a href="{% url 'inventory:home' %}" class="{% if s == 'inventory' %}active{% endif %}">Stock</a>{% endif %}
+    {% if can_sell %}<a href="{% url 'partners:customer_list' %}" class="{% if s == 'partners' %}active{% endif %}">Customers &amp; suppliers</a>{% endif %}
+    {% if is_owner %}
+      <a href="{% url 'documents:list' %}" class="{% if s == 'documents' %}active{% endif %}">Invoices &amp; quotes</a>
+      <a href="{% url 'finance:reports' %}" class="{% if s == 'finance' %}active{% endif %}">Money &amp; reports</a>
+      <a href="{% url 'settings' %}" class="{% if request.resolver_match.url_name == 'settings' or request.resolver_match.url_name == 'user_list' %}active{% endif %}">Settings</a>
+    {% endif %}
+    {% endwith %}
+  </nav>
+  <div class="user">
+    <span>{{ user.get_full_name|default:user.username }}</span>
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Log out</button></form>
+  </div>
+</header>
+{% endif %}
+<main class="{% block main_class %}{% endblock %}">
+  {% if messages %}<ul class="messages">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+<script src="{% static 'js/htmx.min.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

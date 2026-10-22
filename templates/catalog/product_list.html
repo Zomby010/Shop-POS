@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Products{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <h1 style="margin:0">Products</h1>
+  <span class="spacer"></span>
+  {% if is_owner %}
+  <a class="btn" href="{% url 'catalog:categories' %}">Categories</a>
+  <a class="btn" href="{% url 'catalog:import' %}">Import from Excel</a>
+  <a class="btn" href="{% url 'catalog:export' %}">Export to Excel</a>
+  <a class="btn primary" href="{% url 'catalog:product_new' %}">Add product</a>
+  {% endif %}
+</div>
+<form class="toolbar" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search name or scan barcode" autofocus style="min-width:260px">
+  <select name="category"><option value="">All categories</option>{% for c in categories %}<option value="{{ c.pk }}" {% if selected_category == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+  <label class="small"><input type="checkbox" name="low" value="1" {% if low %}checked{% endif %}> Low stock only</label>
+  <button class="btn" type="submit">Filter</button>
+</form>
+<table>
+  <tr><th>Name</th><th>Barcode</th><th>Category</th><th>Sold by</th><th class="num">Price</th>{% if is_owner %}<th class="num">Cost</th>{% endif %}<th class="num">In stock</th><th>Quick-sale</th></tr>
+  {% for p in page %}
+  <tr class="{% if p.stock_qty <= p.effective_threshold %}low{% endif %}">
+    <td>{% if can_stock %}<a href="{% url 'catalog:product_edit' p.pk %}">{{ p.name }}</a>{% else %}{{ p.name }}{% endif %}{% if not p.active %} <span class="badge muted">inactive</span>{% endif %}</td>
+    <td class="small">{{ p.barcode|default:"" }}</td>
+    <td>{{ p.category|default:"" }}</td>
+    <td>{{ p.unit }}</td>
+    <td class="num">{{ p.selling_price|intcomma }}{% if p.is_loose %}/{{ p.unit }}{% endif %}</td>
+    {% if is_owner %}<td class="num">{{ p.cost_price|intcomma }}</td>{% endif %}
+    <td class="num">{{ p.stock_qty|floatformat:"-3" }} {{ p.unit }}{% if p.stock_qty <= p.effective_threshold %} <span class="badge warn">low</span>{% endif %}</td>
+    <td>{{ p.quick_category|default:"" }}</td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="8" class="muted">No products found.{% if is_owner %} <a href="{% url 'catalog:product_new' %}">Add one</a> or <a href="{% url 'catalog:import' %}">import from Excel</a>.{% endif %}</td></tr>
+  {% endfor %}
+</table>
+{% if page.has_other_pages %}
+<div class="toolbar" style="margin-top:1rem">
+  {% if page.has_previous %}<a class="btn small" href="?{% if q %}q={{ q|urlencode }}&{% endif %}page={{ page.previous_page_number }}">Previous</a>{% endif %}
+  <span class="muted">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}<a class="btn small" href="?{% if q %}q={{ q|urlencode }}&{% endif %}page={{ page.next_page_number }}">Next</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

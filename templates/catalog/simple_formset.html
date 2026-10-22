@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+<p class="muted">{{ help }}</p>
+<form method="post" class="panel">
+  {% csrf_token %}
+  {{ formset.management_form }}{{ formset.non_form_errors }}
+  <table>
+    <tr>{% for f in formset.empty_form.visible_fields %}<th>{{ f.label }}</th>{% endfor %}</tr>
+    {% for form in formset %}
+    <tr>{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+      {% for f in form.visible_fields %}<td>{{ f }}{{ f.errors }}</td>{% endfor %}</tr>
+    {% endfor %}
+  </table>
+  <div class="toolbar" style="margin-top:1rem"><button class="btn primary" type="submit">Save</button></div>
+</form>
+{% endblock %}

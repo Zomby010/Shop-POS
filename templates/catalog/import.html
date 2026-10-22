@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Import products{% endblock %}
+{% block content %}
+<h1>Import products from Excel</h1>
+<div class="panel">
+  <p>1. <a href="{% url 'catalog:import_template' %}">Download the template</a> and fill one row per product. Loose goods use Sold by = Weight or Volume and can list preset buttons such as <code>1/4 kg; 1/2 kg; KSh 50</code>.</p>
+  <p>2. Upload it. You'll see a preview with any problems before anything is saved.</p>
+  <form method="post" enctype="multipart/form-data" class="toolbar">
+    {% csrf_token %}
+    {{ form.file }} <button class="btn primary" type="submit">Preview</button>
+    {{ form.file.errors }}
+  </form>
+</div>
+{% if rows is not None %}
+<div class="panel">
+  <div class="toolbar">
+    <h2 style="margin:0">Preview</h2>
+    <span class="badge ok">{{ good }} ready</span>{% if bad %}<span class="badge danger">{{ bad }} with problems (will be skipped)</span>{% endif %}
+    <span class="spacer"></span>
+    {% if good %}
+    <form method="post">{% csrf_token %}<button class="btn primary" type="submit" name="confirm" value="1">Import {{ good }} row{{ good|pluralize }}</button></form>
+    {% endif %}
+  </div>
+  <table>
+    <tr><th>Row</th><th>Action</th><th>Name</th><th>Barcode</th><th>Sold by</th><th class="num">Price</th><th class="num">Opening stock</th><th>Quick-sale</th><th>Problems</th></tr>
+    {% for r in rows %}
+    <tr class="{% if not r.ok %}row-error{% endif %}">
+      <td>{{ r.row_number }}</td>
+      <td>{% if r.action == "update" %}Update{% else %}New{% endif %}</td>
+      <td>{{ r.values.Name }}</td><td class="small">{{ r.values.Barcode }}</td><td>{{ r.values|get_item:"Sold by" }}</td>
+      <td class="num">{{ r.values|get_item:"Selling price" }}</td>
+      <td class="num">{% if r.action == "create" %}{{ r.values|get_item:"Opening stock" }}{% else %}<span class="muted small">unchanged</span>{% endif %}</td>
+      <td>{{ r.values|get_item:"Quick-sale category" }}{% if r.presets %}<div class="pill-list">{% for k, v in r.presets %}<span class="pill">{% if k == "amount" %}KSh {{ v|floatformat:"-2" }}{% else %}{{ v|floatformat:"-3" }}{% endif %}</span>{% endfor %}</div>{% endif %}</td>
+      <td>{% for e in r.errors %}<div>{{ e }}</div>{% endfor %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}

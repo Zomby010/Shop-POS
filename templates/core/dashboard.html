@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <h1 style="margin:0">Today</h1>
+  <span class="spacer"></span>
+  {% if can_sell %}<a class="btn primary big" href="{% url 'sales:sell' %}">Open sell screen</a>{% endif %}
+</div>
+<div class="grid">
+  <div class="stat"><div class="label">Sales today</div><div class="value">KSh {{ today_total|floatformat:2|intcomma }}</div><div class="muted small">{{ today_count }} sale{{ today_count|pluralize }}</div></div>
+  <div class="stat"><div class="label">Cash</div><div class="value">KSh {{ today_cash|floatformat:2|intcomma }}</div></div>
+  <div class="stat"><div class="label">M-Pesa</div><div class="value">KSh {{ today_mpesa|floatformat:2|intcomma }}</div></div>
+  <div class="stat"><div class="label">Deni (credit)</div><div class="value">KSh {{ today_credit|floatformat:2|intcomma }}</div></div>
+</div>
+<div class="panel" style="margin-top:1rem">
+  <div class="toolbar"><h2 style="margin:0">Low stock</h2><span class="badge warn">{{ low_stock_count }}</span><span class="spacer"></span><a href="{% url 'catalog:product_list' %}?low=1">See all</a></div>
+  {% if low_stock %}
+  <table>
+    <tr><th>Product</th><th>Category</th><th class="num">In stock</th><th class="num">Alert at</th></tr>
+    {% for p in low_stock %}
+    <tr><td><a href="{% url 'catalog:product_edit' p.pk %}">{{ p.name }}</a></td><td>{{ p.category|default:"" }}</td><td class="num">{{ p.stock_qty|floatformat:"-3" }} {{ p.unit }}</td><td class="num">{{ p.effective_threshold|floatformat:"-3" }} {{ p.unit }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="muted">Nothing is running low.</p>{% endif %}
+</div>
+{% if held_count %}<p><a href="{% url 'sales:held' %}">{{ held_count }} held sale{{ held_count|pluralize }}</a> waiting to be completed.</p>{% endif %}
+{% endblock %}
