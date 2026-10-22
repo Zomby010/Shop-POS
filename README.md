@@ -9,8 +9,8 @@ Built with Python and Django on SQLite. The full specification is in [docs/build
 | Stage | What it adds | Status |
 | --- | --- | --- |
 | 1. Foundation | Data model, roles and logins, settings page, products with kg/litre units, bulk price tiers, quick-sale buttons, Excel import and export, admin, demo data | Done |
-| 2. Sell screen | Scanning, quick-sale panel, payments, receipts, holds, voids, cash-up | Next |
-| 3. Stock and suppliers | Purchases, recounts, stock takes, loss tracking, suppliers, invoices and quotations | |
+| 2. Sell screen | Scanning, quick-sale panel, payments, receipts, holds, voids, cash-up, deni customers | Done |
+| 3. Stock and suppliers | Purchases, recounts, stock takes, loss tracking, suppliers, invoices and quotations | Next |
 | 4. Money and reports | Expenses, profit, reports, backups, Windows launcher | |
 
 ## Run it for development
@@ -60,6 +60,25 @@ Products → Import from Excel. Download the template, fill one row per product,
 | Stock clerk | Receive purchases, recount, stock takes, view low stock |
 
 Every void and refund is written to the audit log (Settings → Audit log).
+
+### Selling
+
+The sell screen (Sell in the top bar) is built for speed and works with the keyboard alone.
+
+| Key | Does |
+| --- | --- |
+| Scan or type, then Enter | Adds the item. `12*barcode` adds 12 pieces. Typing part of a name finds products without barcodes. |
+| F1 to F8 | Opens a quick-sale category (Rice, Beans, Cooking oil...) |
+| F9 | Pay |
+| F10 | Hold the sale (park it under a name and serve the next customer) |
+| Esc | Back to the scan box |
+
+- **Loose goods:** tap a preset button (1/4 kg, KSh 50) or Custom to type any quantity or amount. Buying by amount works out the quantity: KSh 50 of oil at 300/L is 0.167 L.
+- **Bulk prices** apply automatically when a line reaches a tier and show as "bulk" on the cart and receipt.
+- **Payment:** all cash, all M-Pesa, a split by amount, or deni (credit) for a customer. Cash shows the change. Split amounts must cover the total.
+- **Removing or reducing a line** needs the owner's PIN unless the owner is logged in. Refunds and voids (Sell → Today's sales → Refund or void) also need the PIN and a reason, and are written to the audit log.
+- **Receipts** print to the thermal printer set in Settings (USB, network or Windows printer name; 58 or 80 mm). If the printer fails, the sale is still saved and the receipt can be printed again or from the browser.
+- **Cash-up** (Sell → Cash-up) compares the drawer and M-Pesa with what was recorded since the cashier's last cash-up: cash sales, minus cash refunds, plus deni repaid in cash, minus expenses paid from the drawer.
 
 ## Project layout
 

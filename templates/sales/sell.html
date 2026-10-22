@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load static shop_tags %}
+{% block title %}Sell{% endblock %}
+{% block main_class %}wide{% endblock %}
+{% block head %}<link rel="stylesheet" href="{% static 'css/sell.css' %}">{% endblock %}
+{% block content %}
+<div class="sell" data-owner="{{ is_owner|yesno:'1,0' }}">
+  <section class="sell-left">
+    <form id="scan-form" hx-post="{% url 'sales:scan' %}" hx-target="#cart" hx-swap="innerHTML"
+          hx-on::after-request="this.reset(); document.getElementById('scan').focus()">
+      <input id="scan" name="code" autocomplete="off" autofocus
+             placeholder="Scan barcode or type a name · 12*barcode for 12 pieces">
+    </form>
+    <div id="cart">{% include "sales/_cart.html" %}</div>
+  </section>
+
+  <section class="sell-right">
+    <div class="quick-tabs" role="tablist">
+      {% for cat in categories %}
+      <button type="button" class="quick-tab{% if forloop.first %} active{% endif %}" data-tab="{{ forloop.counter0 }}">
+        {% if forloop.counter <= 8 %}<kbd>F{{ forloop.counter }}</kbd>{% endif %} {{ cat.name }}
+      </button>
+      {% empty %}
+      <p class="muted">No quick-sale categories yet.{% if is_owner %} <a href="{% url 'catalog:quick_categories' %}">Add some</a>, then put loose products in them.{% endif %}</p>
+      {% endfor %}
+    </div>
+    {% for cat in categories %}
+    <div class="quick-panel{% if forloop.first %} active{% endif %}" data-panel="{{ forloop.counter0 }}">
+      {% for p in cat.products.all %}
+      <div class="quick-product">
+        <div class="qp-head"><strong>{{ p.name }}</strong> <span class="muted small">{{ p.selling_price|money }}/{{ p.unit }} · {{ p.stock_qty|qty }} {{ p.unit }} left</span></div>
+        <div class="qp-buttons">
+          {% for preset in p.presets.all %}
+          <button type="button" class="btn preset" hx-post="{% url 'sales:add' %}" hx-target="#cart"
+                  hx-vals='{"product": "{{ p.pk }}", "kind": "{{ preset.kind }}", "value": "{{ preset.value }}"}'>{{ preset.display_label }}</button>
+          {% endfor %}
+          <button type="button" class="btn custom" data-product="{{ p.pk }}" data-name="{{ p.name }}" data-unit="{{ p.unit }}"
+                  data-loose="{{ p.is_loose|yesno:'1,0' }}" data-price="{{ p.selling_price }}">Custom</button>
+        </div>
+      </div>
+      {% empty %}<p class="muted">No products in {{ cat.name }} yet.</p>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </section>
+</div>
+
+<dialog id="custom-dialog">
+  <form id="custom-form" hx-post="{% url 'sales:add' %}" hx-target="#cart"
+        hx-on::after-request="document.getElementById('custom-dialog').close(); document.getElementById('scan').focus()">
+    <h2 id="custom-title" style="margin-top:0">Custom</h2>
+    <input type="hidden" name="product" id="custom-product">
+    <div class="toolbar" id="custom-modes">
+      <label><input type="radio" name="kind" value="qty" checked> By quantity (<span id="custom-unit">kg</span>)</label>
+      <label id="custom-amount-mode"><input type="radio" name="kind" value="amount"> By amount (KSh)</label>
+    </div>
+    <input name="value" id="custom-value" inputmode="decimal" autocomplete="off" required style="font-size:1.4rem;width:100%">
+    <p class="muted small" id="custom-preview"></p>
+    <div class="toolbar"><button class="btn primary big" type="submit">Add</button><button class="btn" type="button" data-close>Cancel</button></div>
+  </form>
+</dialog>
+
+<dialog id="pay-dialog">
+  <form id="pay-form" hx-post="{% url 'sales:pay' %}" hx-target="#pay-error" autocomplete="off">
+    <h2 style="margin-top:0">Payment · <span id="pay-total">KSh 0.00</span></h2>
+    <div class="toolbar">
+      <button type="button" class="btn" data-pay-mode="cash">All cash</button>
+      <button type="button" class="btn" data-pay-mode="mpesa">All M-Pesa</button>
+      <button type="button" class="btn" data-pay-mode="split">Split</button>
+      <button type="button" class="btn" data-pay-mode="credit">Deni</button>
+    </div>
+    <div class="pay-grid">
+      <label>M-Pesa amount<input name="mpesa" id="pay-mpesa" inputmode="decimal"></label>
+      <label>Deni (credit) amount<input name="credit" id="pay-credit" inputmode="decimal"></label>
+      <label>Cash given<input name="cash" id="pay-cash" inputmode="decimal"></label>
+    </div>
+    <div id="pay-customer" hidden>
+      <label>Deni customer
+        <select name="customer"><option value="">Choose a customer…</option>
+          {% for c in customers %}<option value="{{ c.pk }}">{{ c.name }}{% if c.phone %} · {{ c.phone }}{% endif %} (owes {{ c.balance|money }})</option>{% endfor %}
+        </select>
+      </label>
+      <p class="small muted">Or a new customer: <input name="new_customer_name" placeholder="Name"> <input name="new_customer_phone" placeholder="Phone"></p>
+    </div>
+    <p class="pay-summary"><span>Cash due <strong id="pay-cash-due">0.00</strong></span><span>Change <strong id="pay-change">0.00</strong></span></p>
+    <div id="pay-error"></div>
+    <div class="toolbar"><button class="btn primary big" type="submit">Complete sale (Enter)</button><button class="btn" type="button" data-close>Cancel</button></div>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/sell.js' %}"></script>{% endblock %}

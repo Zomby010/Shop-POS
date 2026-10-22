@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Receipt {{ sale.receipt_no }}{% endblock %}
+{% block content %}
+<div class="toolbar no-print">
+  <h1 style="margin:0">{% if done %}Sale complete{% else %}Receipt {{ sale.receipt_no }}{% endif %}</h1>
+  {% if sale.status == "voided" %}<span class="badge danger">Voided</span>{% endif %}
+  <span class="spacer"></span>
+  <form method="post" action="{% url 'sales:reprint' sale.pk %}">{% csrf_token %}<button class="btn">Print receipt</button></form>
+  <button class="btn" onclick="window.print()">Print from browser</button>
+  <a class="btn" href="{% url 'sales:sale_detail' sale.pk %}">Refund or void</a>
+  <a class="btn primary big" id="next-sale" href="{% url 'sales:sell' %}" autofocus>New sale (Enter)</a>
+</div>
+{% if done and sale.change_given %}<div class="panel no-print" style="font-size:1.6rem"><strong>Change: KSh {{ sale.change_given }}</strong></div>{% endif %}
+<pre class="receipt-preview">{% if shop.logo %}<img src="{{ shop.logo.url }}" alt="" style="max-height:60px;display:block;margin:0 auto 6px">{% endif %}{% for line in lines %}{{ line }}
+{% endfor %}</pre>
+{% endblock %}
+{% block scripts %}<script>
+document.getElementById("next-sale").focus();
+document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.tagName !== "BUTTON") location.href = "{% url 'sales:sell' %}"; });
+</script>{% endblock %}

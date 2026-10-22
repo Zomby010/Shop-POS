@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Held sales{% endblock %}
+{% block content %}
+<div class="toolbar"><h1 style="margin:0">Held sales</h1><span class="spacer"></span><a class="btn" href="{% url 'sales:sell' %}">Back to selling</a></div>
+<table>
+  <tr><th>Label</th><th>Held by</th><th>Started</th><th class="num">Items</th><th class="num">Total</th><th></th></tr>
+  {% for s in held %}
+  <tr><td>{{ s.label }}</td><td>{{ s.cashier }}</td><td>{{ s.created_at|date:"H:i" }}</td><td class="num">{{ s.lines.all|length }}</td><td class="num">{{ s.total|money }}</td>
+    <td><form method="post" action="{% url 'sales:resume' s.pk %}">{% csrf_token %}<button class="btn primary small">Resume</button></form></td></tr>
+  {% empty %}<tr><td colspan="6" class="muted">No sales on hold.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

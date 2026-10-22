@@ -1,0 +1,32 @@
+.sell { display: grid; grid-template-columns: minmax(420px, 1.1fr) 1fr; gap: 1rem; align-items: start; }
+@media (max-width: 900px) { .sell { grid-template-columns: 1fr; } }
+.sell-left, .sell-right { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem; }
+#scan { width: 100%; font-size: 1.3rem; padding: .7rem .8rem; margin-bottom: .75rem; }
+.flash { padding: .5rem .7rem; border-radius: 6px; margin-bottom: .5rem; }
+.flash.error { background: var(--danger-soft); color: var(--danger); }
+.flash.info { background: var(--brand-soft); color: var(--brand); }
+.choices { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .5rem; }
+.cart-table td { vertical-align: middle; }
+.cart-table .qty-input { width: 5.5rem; text-align: right; }
+.empty-cart { text-align: center; padding: 2rem; }
+.cart-footer { margin-top: 1rem; display: flex; flex-direction: column; gap: .5rem; }
+.cart-total { font-size: 2.2rem; font-weight: 800; text-align: right; }
+kbd { font-size: .7rem; border: 1px solid currentColor; border-radius: 3px; padding: 0 .25rem; opacity: .7; }
+.quick-tabs { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .75rem; }
+.quick-tab { padding: .6rem .9rem; border: 1px solid var(--line); border-radius: 6px; background: #fff; cursor: pointer; font: inherit; font-weight: 600; }
+.quick-tab.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+.quick-panel { display: none; }
+.quick-panel.active { display: grid; gap: .6rem; }
+.quick-product { border: 1px solid var(--line); border-radius: 6px; padding: .6rem; }
+.qp-head { margin-bottom: .4rem; }
+.qp-buttons { display: flex; flex-wrap: wrap; gap: .4rem; }
+.qp-buttons .btn { min-width: 4.8rem; padding: .7rem .8rem; font-weight: 700; }
+.qp-buttons .btn.preset { background: var(--brand-soft); border-color: #b7e0c9; color: var(--brand); }
+.qp-buttons .btn.custom { border-style: dashed; }
+dialog { border: 0; border-radius: 10px; padding: 1.25rem; width: min(520px, 95vw); box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+dialog::backdrop { background: rgba(16, 24, 40, .45); }
+.pay-grid { display: grid; gap: .6rem; margin: .75rem 0; }
+.pay-grid label, #pay-customer label { display: flex; flex-direction: column; gap: .2rem; font-weight: 600; }
+.pay-grid input { font-size: 1.3rem; }
+.pay-summary { display: flex; justify-content: space-between; font-size: 1.2rem; }
+.receipt-preview { background: #fff; border: 1px dashed var(--line); padding: 1rem; width: max-content; max-width: 100%; margin: 0 auto; font-size: 13px; line-height: 1.35; overflow-x: auto; }

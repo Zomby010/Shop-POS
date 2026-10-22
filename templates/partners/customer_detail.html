@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}{{ customer.name }}{% endblock %}
+{% block content %}
+{% include "partners/_tabs.html" with tab="customers" %}
+<div class="toolbar">
+  <h1 style="margin:0">{{ customer.name }}</h1><span class="muted">{{ customer.phone }}</span><span class="spacer"></span>
+  <a class="btn" href="{% url 'partners:customer_edit' customer.pk %}">Edit</a>
+  {% if is_owner %}<a class="btn" href="{% url 'documents:new' %}?kind=invoice&party_type=customer&customer={{ customer.pk }}">New invoice</a>
+  <a class="btn" href="{% url 'documents:new' %}?kind=quotation&party_type=customer&customer={{ customer.pk }}">New quotation</a>{% endif %}
+</div>
+<div class="grid">
+  <div class="stat"><div class="label">Owes</div><div class="value">KSh {{ customer.balance|money }}</div></div>
+  <div class="stat"><div class="label">Credit limit</div><div class="value">{% if customer.credit_limit is not None %}KSh {{ customer.credit_limit|money }}{% else %}None{% endif %}</div></div>
+</div>
+<form method="post" class="panel toolbar" style="margin-top:1rem">
+  {% csrf_token %}
+  <strong>Record repayment</strong>
+  {{ form.amount }} {{ form.method }} {{ form.note }}
+  <button class="btn primary">Save repayment</button>
+  {{ form.errors }}
+</form>
+<table>
+  <tr><th>When</th><th>Type</th><th>Receipt</th><th>Method</th><th>Note</th><th>By</th><th class="num">Amount</th></tr>
+  {% for e in entries %}
+  <tr><td>{{ e.created_at|date:"d M Y H:i" }}</td><td>{{ e.get_kind_display }}</td>
+    <td>{% if e.sale %}<a href="{% url 'sales:receipt' e.sale.pk %}">{{ e.sale.receipt_no }}</a>{% endif %}</td>
+    <td>{{ e.get_method_display }}</td><td>{{ e.note }}</td><td>{{ e.user|default:"" }}</td>
+    <td class="num">{% if e.kind == "repayment" %}−{% endif %}{{ e.amount|money }}</td></tr>
+  {% empty %}<tr><td colspan="7" class="muted">No deni history.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

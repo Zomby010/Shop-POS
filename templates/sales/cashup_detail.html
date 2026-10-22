@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Cash-up{% endblock %}
+{% block content %}
+<h1>Cash-up · {{ record.cashier }} · {{ record.period_end|date:"d M Y H:i" }}</h1>
+<p class="muted">Covers {{ record.period_start|date:"d M H:i" }} to {{ record.period_end|date:"H:i" }}, {{ expected.sales_count }} sale{{ expected.sales_count|pluralize }}.</p>
+<table style="max-width:640px">
+  <tr><th></th><th class="num">Expected</th><th class="num">Counted</th><th class="num">Difference</th></tr>
+  <tr><td>Cash</td><td class="num">{{ record.expected_cash|money }}</td><td class="num">{{ record.counted_cash|money }}</td>
+    <td class="num">{% with d=record.cash_difference %}<span class="badge {% if d == 0 %}ok{% elif d < 0 %}danger{% else %}warn{% endif %}">{{ d|money }}</span>{% endwith %}</td></tr>
+  <tr><td>M-Pesa</td><td class="num">{{ record.expected_mpesa|money }}</td><td class="num">{{ record.counted_mpesa|money }}</td>
+    <td class="num">{% with d=record.mpesa_difference %}<span class="badge {% if d == 0 %}ok{% elif d < 0 %}danger{% else %}warn{% endif %}">{{ d|money }}</span>{% endwith %}</td></tr>
+</table>
+{% if record.note %}<p>Note: {{ record.note }}</p>{% endif %}
+<p class="muted small">A negative difference means money is short; positive means there is more than recorded.</p>
+<p><a class="btn" href="{% url 'sales:sell' %}">Back to selling</a></p>
+{% endblock %}

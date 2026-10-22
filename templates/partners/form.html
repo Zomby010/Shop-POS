@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+<form method="post" class="stacked panel" style="max-width:640px">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="form-grid">
+  {% for f in form %}<p>{{ f.label_tag }}{{ f }}{% if f.help_text %}<span class="helptext">{{ f.help_text }}</span>{% endif %}{{ f.errors }}</p>{% endfor %}
+  </div>
+  <div class="toolbar"><button class="btn primary">Save</button><a class="btn" href="{% url back %}">Cancel</a></div>
+</form>
+{% endblock %}
