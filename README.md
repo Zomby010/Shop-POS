@@ -83,6 +83,10 @@ Every product is sold by **Piece**, **Weight** (priced per kg) or **Volume** (pr
 - **Quick-sale buttons:** put a product in a quick-sale category (Rice, Beans, Cooking oil) and give it buttons such as `1/4 kg`, `500 g`, `1/2 L` or `KSh 50`. These appear on the sell screen. Categories are managed in Settings → Quick-sale categories.
 - **Stock never changes directly.** Every change is a stock movement (opening, purchase, sale, refund, recount, stock take, loss) that records the cost at that moment, so profit stays right when cost prices change. Purchases update the weighted average cost.
 
+### Adding as you go
+
+Dropdowns for a category, quick-sale category, supplier, customer, product or expense category end with **+ New…**. Pick it to add one in a small pop-up without leaving the form; it is then selected for you. Owners can add all of these; stock clerks can add suppliers and cashiers can add customers. Loss reasons can be picked from the list or typed.
+
 ### Excel import
 
 Products → Import from Excel. Download the template, fill one row per product, upload it, and check the preview. Rows with problems are listed and skipped; nothing is saved until you confirm. Existing products are matched by barcode, then by name. Opening stock is only used for new products.
@@ -109,6 +113,7 @@ The sell screen (Sell in the top bar) is built for speed and works with the keyb
 | F10 | Hold the sale (park it under a name and serve the next customer) |
 | Esc | Back to the scan box |
 
+- **All items list:** the first tab on the right lists every product, with a search box and a category filter. Tap a product to add one piece; loose goods and the **Qty** button ask for a quantity or amount. Useful before a scanner is connected and for items without barcodes.
 - **Loose goods:** tap a preset button (1/4 kg, KSh 50) or Custom to type any quantity or amount. Buying by amount works out the quantity: KSh 50 of oil at 300/L is 0.167 L.
 - **Bulk prices** apply automatically when a line reaches a tier and show as "bulk" on the cart and receipt.
 - **Payment:** all cash, all M-Pesa, a split by amount, or deni (credit) for a customer. Cash shows the change. Split amounts must cover the total.

@@ -24,6 +24,7 @@
     document.getElementById("custom-product").value = btn.dataset.product;
     document.getElementById("custom-unit").textContent = btn.dataset.unit;
     document.getElementById("custom-amount-mode").hidden = btn.dataset.loose !== "1";
+    document.getElementById("custom-value").setAttribute("inputmode", btn.dataset.loose === "1" ? "decimal" : "numeric");
     customDialog.querySelector('input[value="qty"]').checked = true;
     customDialog.dataset.price = btn.dataset.price;
     customDialog.dataset.unit = btn.dataset.unit;

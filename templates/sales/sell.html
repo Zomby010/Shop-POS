@@ -16,16 +16,28 @@
 
   <section class="sell-right">
     <div class="quick-tabs" role="tablist">
+      <button type="button" class="quick-tab active" data-tab="all">All items</button>
       {% for cat in categories %}
-      <button type="button" class="quick-tab{% if forloop.first %} active{% endif %}" data-tab="{{ forloop.counter0 }}">
+      <button type="button" class="quick-tab" data-tab="{{ forloop.counter0 }}">
         {% if forloop.counter <= 8 %}<kbd>F{{ forloop.counter }}</kbd>{% endif %} {{ cat.name }}
       </button>
-      {% empty %}
-      <p class="muted">No quick-sale categories yet.{% if is_owner %} <a href="{% url 'catalog:quick_categories' %}">Add some</a>, then put loose products in them.{% endif %}</p>
       {% endfor %}
     </div>
+    {% if not categories and is_owner %}<p class="muted small">Tip: <a href="{% url 'catalog:quick_categories' %}">add quick-sale categories</a> (Rice, Beans, Cooking oil) to get one-tap buttons for loose goods.</p>{% endif %}
+    <div class="quick-panel active" data-panel="all">
+      <form class="item-filter" hx-get="{% url 'sales:products' %}" hx-target="#item-list"
+            hx-trigger="input changed delay:250ms from:#item-search, change from:#item-category, submit">
+        <input type="search" id="item-search" name="q" placeholder="Search items by name, barcode or category" autocomplete="off">
+        <select id="item-category" name="category">
+          <option value="">All categories</option>
+          {% for c in product_categories %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}
+          <option value="none">No category</option>
+        </select>
+      </form>
+      <div id="item-list" class="item-list" hx-get="{% url 'sales:products' %}" hx-trigger="load"><p class="muted">Loading items…</p></div>
+    </div>
     {% for cat in categories %}
-    <div class="quick-panel{% if forloop.first %} active{% endif %}" data-panel="{{ forloop.counter0 }}">
+    <div class="quick-panel" data-panel="{{ forloop.counter0 }}">
       {% for p in cat.products.all %}
       <div class="quick-product">
         <div class="qp-head"><strong>{{ p.name }}</strong> <span class="muted small">{{ p.selling_price|money }}/{{ p.unit }} · {{ p.stock_qty|qty }} {{ p.unit }} left</span></div>
@@ -76,11 +88,10 @@
     </div>
     <div id="pay-customer" hidden>
       <label>Deni customer
-        <select name="customer"><option value="">Choose a customer…</option>
+        <select name="customer" data-quick-add="customer"><option value="">Choose a customer…</option>
           {% for c in customers %}<option value="{{ c.pk }}">{{ c.name }}{% if c.phone %} · {{ c.phone }}{% endif %} (owes {{ c.balance|money }})</option>{% endfor %}
         </select>
       </label>
-      <p class="small muted">Or a new customer: <input name="new_customer_name" placeholder="Name"> <input name="new_customer_phone" placeholder="Phone"></p>
     </div>
     <p class="pay-summary"><span>Cash due <strong id="pay-cash-due">0.00</strong></span><span>Change <strong id="pay-change">0.00</strong></span></p>
     <div id="pay-error"></div>

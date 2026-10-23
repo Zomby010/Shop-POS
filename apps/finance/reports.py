@@ -126,8 +126,8 @@ def profit(start, end):
             expenses=expense_days.get(day, ZERO), stock_loss=q2(-loss_values.get(day, ZERO)),
         ))
     by_category = [
-        (Expense.Category(row["category"]).label, row["v"])
-        for row in expenses.values("category").annotate(v=Sum("amount")).order_by("-v")
+        (row["category__name"], row["v"])
+        for row in expenses.values("category__name").annotate(v=Sum("amount")).order_by("-v")
     ]
     by_kind = [
         (StockMovement.Kind(row["kind"]).label, q2(-(row["v"] or ZERO)))

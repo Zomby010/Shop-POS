@@ -190,7 +190,7 @@ def test_void_sale_reverses_everything(cart, cashier, owner, soap):
 
 @pytest.mark.django_db
 def test_cashup_expected_amounts(cashier, owner, soap):
-    from apps.finance.models import Expense
+    from apps.finance.models import Expense, ExpenseCategory
 
     start = timezone.now() - timedelta(seconds=1)
     for kwargs in ({}, {"mpesa": "210"}, {"cash_tendered": "100", "mpesa": "110"}):
@@ -201,7 +201,7 @@ def test_cashup_expected_amounts(cashier, owner, soap):
     services.refund_lines(last, {last.lines.get().pk: 1}, user=cashier, approver=owner, reason="x", method="cash")
     customer = Customer.objects.create(name="A")
     services.record_repayment(customer, "50", "cash", user=cashier)
-    Expense.objects.create(category="transport", amount=Decimal("30"), method="cash", user=cashier)
+    Expense.objects.create(category=ExpenseCategory.objects.get_or_create(name="Transport")[0], amount=Decimal("30"), method="cash", user=cashier)
     record = services.save_cashup(cashier, counted_cash="320", counted_mpesa="320", opening_float="1000")
     # cash: 1000 float + 210 + 100 - 210 refund + 50 repaid - 30 expense = 1120
     assert record.expected_cash == Decimal("1120.00")

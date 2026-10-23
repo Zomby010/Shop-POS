@@ -12,14 +12,16 @@ class ProductChoiceField(forms.ModelChoiceField):
 
 
 class PurchaseForm(forms.Form):
-    supplier = forms.ModelChoiceField(Supplier.objects.filter(active=True), required=False)
+    supplier = forms.ModelChoiceField(Supplier.objects.filter(active=True), required=False,
+                                      widget=forms.Select(attrs={"data-quick-add": "supplier"}))
     date = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"))
     supplier_reference = forms.CharField(required=False, max_length=60, label="Their invoice / delivery no.")
     note = forms.CharField(required=False, max_length=200)
 
 
 class PurchaseLineForm(forms.Form):
-    product = ProductChoiceField(Product.objects.active().order_by("name"))
+    product = ProductChoiceField(Product.objects.active().order_by("name"),
+                                 widget=forms.Select(attrs={"data-quick-add": "product"}))
     packs = forms.DecimalField(min_value=0.001, decimal_places=3, max_digits=12, initial=1, label="Packs")
     pack_size = forms.DecimalField(min_value=0.001, decimal_places=3, max_digits=12, initial=1,
                                    label="Units per pack", help_text="e.g. 50 for a 50 kg sack, 1 for single items")
@@ -36,7 +38,9 @@ PurchaseLineFormSet = forms.formset_factory(PurchaseLineForm, extra=5, min_num=1
 class LossForm(forms.Form):
     product = ProductChoiceField(Product.objects.active().order_by("name"))
     quantity = forms.DecimalField(min_value=0.001, decimal_places=3, max_digits=12)
-    reason = forms.ChoiceField(choices=[(r, r) for r in LOSS_REASONS])
+    reason = forms.CharField(max_length=40, initial=LOSS_REASONS[0],
+                             widget=forms.TextInput(attrs={"list": "loss-reasons", "autocomplete": "off"}),
+                             help_text="Pick one or type your own")
     note = forms.CharField(required=False, max_length=150)
 
 

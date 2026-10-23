@@ -93,7 +93,7 @@ def loss(request):
             messages.success(request, "Loss recorded.")
             return redirect("inventory:loss")
     recent = StockMovement.objects.filter(kind=StockMovement.Kind.LOSS).select_related("product", "user")[:30]
-    return render(request, "inventory/loss.html", {"form": form, "recent": recent})
+    return render(request, "inventory/loss.html", {"form": form, "recent": recent, "reasons": services.LOSS_REASONS})
 
 
 @stock_required

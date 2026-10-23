@@ -14,7 +14,7 @@
 <table>
   <tr><th>Date</th><th>Type</th><th>Paid by</th><th>Note</th><th>By</th><th class="num">Amount</th><th></th></tr>
   {% for e in items %}
-  <tr><td>{{ e.date }}</td><td>{{ e.get_category_display }}</td><td>{{ e.get_method_display }}</td><td>{{ e.note }}</td><td>{{ e.user|default:"" }}</td><td class="num">{{ e.amount|money }}</td>
+  <tr><td>{{ e.date }}</td><td>{{ e.category }}</td><td>{{ e.get_method_display }}</td><td>{{ e.note }}</td><td>{{ e.user|default:"" }}</td><td class="num">{{ e.amount|money }}</td>
     <td><form method="post" action="{% url 'finance:expense_delete' e.pk %}" onsubmit="return confirm('Delete this expense?')">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn small">Delete</button></form></td></tr>
   {% empty %}<tr><td colspan="7" class="muted">No expenses in this period.</td></tr>
   {% endfor %}

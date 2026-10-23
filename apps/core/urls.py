@@ -1,7 +1,7 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from . import views
+from . import quick_add, views
 
 urlpatterns = [
     path("", views.dashboard, name="dashboard"),
@@ -12,4 +12,5 @@ urlpatterns = [
     path("settings/users/new/", views.user_edit, name="user_new"),
     path("settings/users/<int:pk>/", views.user_edit, name="user_edit"),
     path("settings/audit-log/", views.audit_log, name="audit_log"),
+    path("quick-add/<str:kind>/", quick_add.quick_add, name="quick_add"),
 ]

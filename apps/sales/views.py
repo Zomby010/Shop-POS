@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from apps.catalog.models import Product, QuickPreset, QuickSaleCategory
+from apps.catalog.models import Category, Product, QuickPreset, QuickSaleCategory
 from apps.core.audit import verify_owner_pin
 from apps.core.forms import ShopSettingsForm
 from apps.core.models import ShopSettings
@@ -53,7 +53,31 @@ def sell(request):
     customers = Customer.objects.filter(active=True).order_by("name")
     return render(request, "sales/sell.html", {
         "cart": cart, "lines": cart.lines.select_related("product"), "categories": categories,
+        "product_categories": Category.objects.filter(products__active=True).distinct(),
         "customers": customers, "held_count": Sale.objects.filter(status=Sale.Status.HELD).count(),
+    })
+
+
+PRODUCT_LIST_LIMIT = 200
+
+
+@seller_required
+def product_list(request):
+    """The sell screen's scrollable item list, for picking products without scanning."""
+    products = Product.objects.active().select_related("category").with_threshold().order_by("name")
+    term = request.GET.get("q", "").strip()
+    if term:
+        products = products.filter(
+            Q(name__icontains=term) | Q(barcode__icontains=term) | Q(category__name__icontains=term)
+        )
+    category = request.GET.get("category")
+    if category == "none":
+        products = products.filter(category__isnull=True)
+    elif category:
+        products = products.filter(category_id=category)
+    total = products.count()
+    return render(request, "sales/_product_list.html", {
+        "products": products[:PRODUCT_LIST_LIMIT], "total": total, "limit": PRODUCT_LIST_LIMIT,
     })
 
 

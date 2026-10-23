@@ -20,6 +20,10 @@ class ProductForm(forms.ModelForm):
             "low_stock_threshold", "quick_category", "quick_order", "active",
         ]
         labels = {"quick_category": "Quick-sale category", "quick_order": "Order on quick-sale panel"}
+        widgets = {
+            "category": forms.Select(attrs={"data-quick-add": "category"}),
+            "quick_category": forms.Select(attrs={"data-quick-add": "quick_category"}),
+        }
 
     def __init__(self, *args, can_edit_prices=True, **kwargs):
         super().__init__(*args, **kwargs)

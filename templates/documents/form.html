@@ -74,6 +74,9 @@
     });
     document.getElementById("dl-subtotal").textContent = subtotal.toFixed(2);
   }
+  document.addEventListener("quickadd:created", (e) => {
+    if (e.detail.kind === "product") products[e.detail.id] = e.detail.data;
+  });
   form.addEventListener("change", (e) => { showParty(); update(e); });
   form.addEventListener("input", (e) => update(e.target.name.endsWith("unit_price") ? null : e));
   showParty(); update();

@@ -138,3 +138,10 @@ def test_clerk_cannot_approve_stocktake(client, clerk, rice):
     client.force_login(clerk)
     take = services.start_stocktake(user=clerk)
     assert client.post(f"/stock/stock-takes/{take.pk}/approve/").status_code == 403
+
+
+@pytest.mark.django_db
+def test_loss_with_own_reason(owner_client, rice):
+    owner_client.post("/stock/loss/", {"product": rice.pk, "quantity": "0.25", "reason": "Rats in the store", "note": ""})
+    movement = StockMovement.objects.filter(kind=StockMovement.Kind.LOSS).get()
+    assert movement.reason == "Rats in the store"

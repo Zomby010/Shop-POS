@@ -10,7 +10,7 @@ from openpyxl import load_workbook
 from apps.core import backup
 from apps.core.models import ShopSettings
 from apps.finance import reports
-from apps.finance.models import Expense
+from apps.finance.models import Expense, ExpenseCategory
 from apps.inventory import services as stock
 from apps.partners.models import Customer
 from apps.sales import services as sales
@@ -32,7 +32,7 @@ def day_of_trading(cashier, owner, rice, soap, oil):
     s4 = sell([(rice, {"quantity": Decimal("2")})])  # 400, voided below
     sales.refund_lines(s1, {s1.lines.get(product=soap).pk: 1}, user=cashier, approver=owner, reason="Damaged")
     sales.void_sale(s4, user=cashier, approver=owner, reason="Mistake")
-    Expense.objects.create(category="transport", amount=Decimal("150"), method="cash", user=owner)
+    Expense.objects.create(category=ExpenseCategory.objects.get_or_create(name="Transport")[0], amount=Decimal("150"), method="cash", user=owner)
     stock.record_loss(oil, "0.5", user=owner, reason="Spillage")
     return {"s1": s1, "s2": s2}
 
@@ -104,7 +104,8 @@ def test_reports_owner_only(cashier_client):
 
 @pytest.mark.django_db
 def test_add_and_delete_expense(owner_client):
-    owner_client.post("/money/expenses/", {"date": timezone.localdate().isoformat(), "category": "rent",
+    rent = ExpenseCategory.objects.get_or_create(name="Rent")[0]
+    owner_client.post("/money/expenses/", {"date": timezone.localdate().isoformat(), "category": rent.pk,
                                           "amount": "15000", "method": "mpesa", "note": "October"})
     expense = Expense.objects.get()
     assert expense.amount == Decimal("15000.00")
