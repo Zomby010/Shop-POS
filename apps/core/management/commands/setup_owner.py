@@ -1,6 +1,7 @@
 """First-run setup: create the owner's login and PIN if nobody can log in yet."""
 
 import getpass
+import os
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -34,4 +35,4 @@ class Command(BaseCommand):
         user.groups.add(Group.objects.get(name=OWNER))
         user.profile.set_pin(pin)
         user.profile.save()
-        self.stdout.write(self.style.SUCCESS(f"Owner '{username}' created. Log in at http://localhost:8000/"))
+        self.stdout.write(self.style.SUCCESS(f"Owner '{username}' created. Log in at http://localhost:{os.environ.get('SHOPPOS_PORT', '8000')}/"))

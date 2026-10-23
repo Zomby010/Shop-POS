@@ -20,6 +20,8 @@ Built with Python and Django on SQLite. The full specification is in [docs/build
 3. Double-click **`start_pos.bat`**. The first time, it needs the internet for a few minutes to install its libraries, then asks you to create the owner's username, password and PIN.
 4. The browser opens at http://localhost:8000. Keep the black window open while the shop is open; closing it stops the POS. Put a shortcut to `start_pos.bat` on the desktop.
 
+   If another program already uses port 8000, create a text file called `port.txt` next to `start_pos.bat` containing just a free port number, such as `8001`. The POS then opens at http://localhost:8001.
+
 After that the POS works fully offline.
 
 **First things to do as the owner**
@@ -69,7 +71,7 @@ Change these passwords in Settings → Users before real use. For a clean shop w
 
 Shop data (database, logo, secret key) lives in the `data/` folder, which is not part of the code. Set `SHOPPOS_DATA_DIR` to keep it elsewhere.
 
-Run the tests with `pytest`. `python serve.py` runs the same production server that `start_pos.bat` uses (waitress, on port 8000).
+Run the tests with `pytest`. `python serve.py` runs the same production server that `start_pos.bat` uses (waitress, on port 8000, or the port in the `SHOPPOS_PORT` environment variable).
 
 ## How things work
 
