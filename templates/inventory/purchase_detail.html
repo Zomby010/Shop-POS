@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}{{ purchase }}{% endblock %}
+{% block content %}
+{% include "inventory/_nav.html" with tab="purchases" %}
+<h1>{{ purchase }} · {{ purchase.date }}</h1>
+<p>{% if purchase.supplier %}From <a href="{% url 'partners:supplier_detail' purchase.supplier.pk %}">{{ purchase.supplier }}</a>{% endif %}{% if purchase.supplier_reference %} · their ref {{ purchase.supplier_reference }}{% endif %} · received by {{ purchase.user|default:"" }}</p>
+{% if purchase.note %}<p class="muted">{{ purchase.note }}</p>{% endif %}
+<table>
+  <tr><th>Product</th><th class="num">Packs</th><th class="num">Per pack</th><th class="num">Cost per pack</th><th class="num">Quantity added</th><th class="num">Unit cost</th><th class="num">Line total</th></tr>
+  {% for l in lines %}
+  <tr><td>{{ l.product.name }}</td><td class="num">{{ l.packs|qty }}</td><td class="num">{{ l.pack_size|qty }} {{ l.product.unit }}</td><td class="num">{{ l.pack_cost|money }}</td><td class="num">{{ l.quantity|qty }} {{ l.product.unit }}</td><td class="num">{{ l.unit_cost|money }}</td><td class="num">{{ l.line_total|money }}</td></tr>
+  {% endfor %}
+  <tr><th colspan="6" class="num">Total</th><th class="num">{{ purchase.total|money }}</th></tr>
+</table>
+{% endblock %}

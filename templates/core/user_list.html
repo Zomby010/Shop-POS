@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="toolbar"><h1 style="margin:0">Users</h1><span class="spacer"></span><a class="btn primary" href="{% url 'user_new' %}">Add user</a></div>
+<table>
+  <tr><th>Username</th><th>Name</th><th>Role</th><th>Owner PIN</th><th>Status</th></tr>
+  {% for u, roles in rows %}
+  <tr>
+    <td><a href="{% url 'user_edit' u.pk %}">{{ u.username }}</a></td>
+    <td>{{ u.first_name }}</td><td>{{ roles }}</td>
+    <td>{% if u.profile.pin_hash %}<span class="badge ok">Set</span>{% else %}<span class="badge muted">None</span>{% endif %}</td>
+    <td>{% if u.is_active %}Active{% else %}<span class="muted">Disabled</span>{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+<p class="muted small">Cashiers sell, hold sales, print receipts, record deni and do their own cash-up. Stock clerks receive stock and count it. Owners can do everything, and their PIN approves voids and refunds.</p>
+{% endblock %}

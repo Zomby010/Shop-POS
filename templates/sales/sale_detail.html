@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}{{ sale.receipt_no }}{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <h1 style="margin:0">{{ sale.receipt_no }}</h1>
+  {% if sale.status == "voided" %}<span class="badge danger">Voided</span>{% endif %}
+  <span class="muted">{{ sale.completed_at|date:"d M Y H:i" }} · {{ sale.cashier }}{% if sale.customer %} · deni: {{ sale.customer.name }}{% endif %}</span>
+  <span class="spacer"></span><a class="btn" href="{% url 'sales:receipt' sale.pk %}">Receipt</a>
+</div>
+{% if sale.status == "completed" %}
+<form method="post" class="panel">
+  {% csrf_token %}
+  <h2 style="margin-top:0">Return items</h2>
+  <table>
+    <tr><th>Item</th><th class="num">Sold</th><th class="num">Already returned</th><th class="num">Line total</th><th>Return quantity</th></tr>
+    {% for line in lines %}
+    <tr><td>{{ line.description }}</td><td class="num">{{ line.quantity|qty }} {{ line.unit }}</td><td class="num">{{ line.refunded_qty|qty }}</td><td class="num">{{ line.line_total|money }}</td>
+      <td>{% if line.refundable_qty > 0 %}<input name="qty_{{ line.pk }}" inputmode="decimal" placeholder="0" size="6"> <span class="muted small">max {{ line.refundable_qty|qty }}</span>{% endif %}</td></tr>
+    {% endfor %}
+  </table>
+  <div class="form-grid" style="margin-top:1rem">
+    <label>Money back by<select name="method">{% for value, label in refund_methods %}{% if value != "credit" or sale.customer %}<option value="{{ value }}">{{ label }}</option>{% endif %}{% endfor %}</select></label>
+    <label>Reason<input name="reason" required placeholder="e.g. damaged packet"></label>
+    {% if not is_owner %}<label>Owner PIN<input name="pin" type="password" inputmode="numeric" required></label>{% endif %}
+  </div>
+  <div class="toolbar" style="margin-top:1rem">
+    <button class="btn primary" name="action" value="refund">Refund selected items</button>
+    <button class="btn danger" name="action" value="void" onclick="return confirm('Void the whole sale? Stock comes back and every payment is reversed.')">Void whole sale</button>
+  </div>
+  <p class="muted small">Voiding needs a reason{% if not is_owner %} and the owner's PIN{% endif %}. Cash is returned as cash, M-Pesa as M-Pesa, and deni is taken off the customer's balance.</p>
+</form>
+{% endif %}
+{% if refunds %}
+<div class="panel"><h2 style="margin-top:0">Refunds</h2>
+<table><tr><th>When</th><th>By</th><th>Approved by</th><th>Method</th><th>Reason</th><th class="num">Amount</th></tr>
+{% for r in refunds %}<tr><td>{{ r.created_at|date:"d M H:i" }}</td><td>{{ r.user }}</td><td>{{ r.authorised_by }}</td><td>{{ r.get_method_display }}{% if r.is_void %} (void){% endif %}</td><td>{{ r.reason }}</td><td class="num">{{ r.total|money }}</td></tr>{% endfor %}
+</table></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Sales{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <h1 style="margin:0">Sales</h1><span class="spacer"></span>
+  {% if is_owner %}<a class="btn" href="{% url 'sales:cashup_list' %}">Cash-ups</a>{% endif %}
+  <a class="btn" href="{% url 'sales:sell' %}">Back to selling</a>
+</div>
+<form class="toolbar" method="get">
+  <input type="date" name="day" value="{{ day }}">
+  <input type="search" name="q" value="{{ q }}" placeholder="Receipt number or customer">
+  <button class="btn">Show</button>
+</form>
+<table>
+  <tr><th>Receipt</th><th>Time</th><th>Cashier</th><th>Paid by</th><th class="num">Total</th><th></th></tr>
+  {% for s in page %}
+  <tr><td><a href="{% url 'sales:receipt' s.pk %}">{{ s.receipt_no }}</a>{% if s.status == "voided" %} <span class="badge danger">voided</span>{% endif %}</td>
+    <td>{{ s.completed_at|date:"d M H:i" }}</td><td>{{ s.cashier }}</td>
+    <td>{% for p in s.payments.all %}{{ p.get_method_display }} {{ p.amount|money }}{% if not forloop.last %} · {% endif %}{% endfor %}{% if s.customer %} ({{ s.customer.name }}){% endif %}</td>
+    <td class="num">{{ s.total|money }}</td>
+    <td><a href="{% url 'sales:sale_detail' s.pk %}">Refund or void</a></td></tr>
+  {% empty %}<tr><td colspan="6" class="muted">No sales.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

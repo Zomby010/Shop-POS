@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Profit{% endblock %}
+{% block content %}
+{% include "finance/_nav.html" %}
+<h1>Profit {% if start == end %}for {{ report.start|date:"D d M Y" }}{% else %}{{ report.start|date:"d M" }} to {{ report.end|date:"d M Y" }}{% endif %}</h1>
+{% include "finance/_range.html" %}
+<div class="grid">
+  <div class="stat"><div class="label">Net sales</div><div class="value">{{ total.net_sales|money }}</div><div class="muted small">{{ total.sales|money }} sales − {{ total.refunds|money }} refunds</div></div>
+  <div class="stat"><div class="label">Cost of goods sold</div><div class="value">{{ total.cost_of_sales|money }}</div></div>
+  <div class="stat"><div class="label">Gross profit</div><div class="value">{{ total.gross_profit|money }}</div><div class="muted small">{{ total.margin_pct|floatformat:1 }}% margin</div></div>
+  <div class="stat"><div class="label">Expenses</div><div class="value">{{ total.expenses|money }}</div></div>
+  <div class="stat"><div class="label">Stock loss</div><div class="value">{{ total.stock_loss|money }}</div><div class="muted small">wastage and count differences at cost</div></div>
+  <div class="stat"><div class="label">Net profit</div><div class="value" style="color:{% if total.net_profit < 0 %}var(--danger){% else %}var(--brand){% endif %}">{{ total.net_profit|money }}</div></div>
+</div>
+{% if report.days|length > 1 %}
+<h2>By day</h2>
+<table>
+  <tr><th>Day</th><th class="num">Net sales</th><th class="num">Cost of goods</th><th class="num">Gross profit</th><th class="num">Expenses</th><th class="num">Stock loss</th><th class="num">Net profit</th></tr>
+  {% for d in report.days %}
+  <tr><td>{{ d.day|date:"D d M" }}</td><td class="num">{{ d.net_sales|money }}</td><td class="num">{{ d.cost_of_sales|money }}</td><td class="num">{{ d.gross_profit|money }}</td><td class="num">{{ d.expenses|money }}</td><td class="num">{{ d.stock_loss|money }}</td><td class="num"><strong>{{ d.net_profit|money }}</strong></td></tr>
+  {% endfor %}
+</table>
+{% endif %}
+<div class="grid" style="margin-top:1rem">
+  <div class="panel"><h2 style="margin-top:0">Expenses by type</h2>
+    <table>{% for name, amount in report.expenses_by_category %}<tr><td>{{ name }}</td><td class="num">{{ amount|money }}</td></tr>{% empty %}<tr><td class="muted">No expenses in this period. <a href="{% url 'finance:expenses' %}">Record one</a>.</td></tr>{% endfor %}</table>
+  </div>
+  <div class="panel"><h2 style="margin-top:0">Stock loss by type</h2>
+    <table>{% for name, amount in report.loss_by_kind %}<tr><td>{{ name }}</td><td class="num">{{ amount|money }}</td></tr>{% empty %}<tr><td class="muted">None recorded.</td></tr>{% endfor %}</table>
+    <p class="muted small">A negative figure is stock found (a count above what the system expected).</p>
+  </div>
+</div>
+<p class="muted small">Gross profit is sales minus what those goods cost when they were sold. Net profit also takes off expenses and stock lost to wastage or found missing in counts.</p>
+{% endblock %}

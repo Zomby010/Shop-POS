@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Stock movements{% endblock %}
+{% block content %}
+{% include "inventory/_nav.html" with tab="movements" %}
+<form class="toolbar" method="get">
+  <select name="kind"><option value="">All types</option>{% for value, label in kinds %}<option value="{{ value }}" {% if kind == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+  <button class="btn">Filter</button>
+</form>
+{% include "inventory/_movements.html" %}
+{% endblock %}

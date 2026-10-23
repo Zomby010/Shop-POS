@@ -1,0 +1,43 @@
+{% load shop_tags %}
+<div class="cart" data-total="{{ cart.total }}" data-lines="{{ lines|length }}">
+  {% if error %}<div class="flash error">{{ error }}{% if choices.unknown and is_owner %} <a href="{% url 'catalog:product_new' %}?barcode={{ choices.unknown|urlencode }}">Add product</a>{% endif %}</div>{% endif %}
+  {% if info %}<div class="flash info">{{ info }}</div>{% endif %}
+  {% if choices.products %}
+  <div class="choices">
+    {% for p in choices.products %}
+    <button type="button" class="btn" hx-post="{% url 'sales:add' %}" hx-target="#cart"
+            hx-vals='{"product": "{{ p.pk }}", "kind": "qty", "value": "{{ choices.quantity|default:1 }}"}'>{{ p.name }} <span class="muted small">{{ p.selling_price|money }}/{{ p.unit }}</span></button>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if cart.label %}<p class="muted small">Resumed: {{ cart.label }}</p>{% endif %}
+  <table class="cart-table">
+    <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Total</th><th></th></tr></thead>
+    <tbody>
+    {% for line in lines %}
+    <tr>
+      <td>{{ line.description }}{% if line.tier_applied %} <span class="badge ok">bulk</span>{% endif %}{% if line.entered_as == "amount" %} <span class="badge muted">by amount</span>{% endif %}</td>
+      <td class="num">
+        <input class="qty-input" name="quantity" value="{{ line.quantity|qty }}" data-old="{{ line.quantity|qty }}" inputmode="decimal"
+               hx-post="{% url 'sales:line_update' line.pk %}" hx-trigger="change" hx-target="#cart"> {{ line.unit }}
+      </td>
+      <td class="num">{{ line.unit_price|money }}</td>
+      <td class="num">{{ line.line_total|money }}</td>
+      <td><button type="button" class="btn small remove" title="Remove" hx-post="{% url 'sales:line_update' line.pk %}"
+                  hx-vals='{"quantity": "0"}' hx-target="#cart" data-remove="1">✕</button></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="muted empty-cart">Scan an item or tap a quick-sale button.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <div class="cart-footer">
+    <div class="cart-total">KSh {{ cart.total|money }}</div>
+    <div class="toolbar">
+      <button type="button" class="btn big" id="hold-btn" {% if not lines %}disabled{% endif %}><kbd>F10</kbd> Hold</button>
+      <a class="btn big" href="{% url 'sales:held' %}">Held{% if held_count %} <span class="badge warn">{{ held_count }}</span>{% endif %}</a>
+      <button type="button" class="btn primary big" id="pay-btn" {% if not lines %}disabled{% endif %}><kbd>F9</kbd> Pay</button>
+    </div>
+    <div class="toolbar small"><a href="{% url 'sales:history' %}">Today's sales</a> · <a href="{% url 'sales:cashup' %}">Cash-up</a></div>
+  </div>
+</div>

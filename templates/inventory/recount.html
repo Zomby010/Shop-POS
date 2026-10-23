@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Recount{% endblock %}
+{% block content %}
+{% include "inventory/_nav.html" with tab="recount" %}
+<h1>Quick recount</h1>
+<p class="muted">Count one or a few products and set their stock to what you counted. For a full count of the shop, use a stock take.</p>
+<form class="toolbar" method="get"><input type="search" name="q" value="{{ q }}" placeholder="Search name or scan barcode" autofocus><button class="btn">Find</button></form>
+{% if products %}
+<form method="post" class="panel">
+  {% csrf_token %}
+  <table>
+    <tr><th>Product</th><th class="num">System says</th><th>Counted</th></tr>
+    {% for p in products %}
+    <tr><td>{{ p.name }}</td><td class="num">{{ p.stock_qty|qty }} {{ p.unit }}</td><td><input name="count_{{ p.pk }}" inputmode="decimal" size="8"> {{ p.unit }}</td></tr>
+    {% endfor %}
+  </table>
+  <div class="toolbar" style="margin-top:1rem"><input name="reason" placeholder="Reason (optional)"><button class="btn primary">Save counts</button></div>
+</form>
+{% elif q %}<p class="muted">No products match.</p>{% endif %}
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Invoices and quotations{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <h1 style="margin:0">Invoices and quotations</h1><span class="spacer"></span>
+  <a class="btn" href="{% url 'documents:new' %}?kind=quotation">New quotation</a>
+  <a class="btn primary" href="{% url 'documents:new' %}?kind=invoice">New invoice</a>
+</div>
+<form class="toolbar" method="get">
+  <select name="kind"><option value="">Invoices and quotations</option><option value="invoice" {% if kind == "invoice" %}selected{% endif %}>Invoices</option><option value="quotation" {% if kind == "quotation" %}selected{% endif %}>Quotations</option></select>
+  <input type="search" name="q" value="{{ q }}" placeholder="Customer or supplier">
+  <button class="btn">Filter</button>
+</form>
+<table>
+  <tr><th>Number</th><th>Date</th><th>For</th><th>Type</th><th>Status</th><th class="num">Total</th><th class="num">Balance</th><th></th></tr>
+  {% for d in documents %}
+  <tr><td><a href="{% url 'documents:detail' d.pk %}">{{ d.code }}</a>{% if d.is_bulk %} <span class="badge ok">bulk</span>{% endif %}</td><td>{{ d.date }}</td>
+    <td>{{ d.party_display }} <span class="muted small">{{ d.get_party_type_display }}</span></td><td>{{ d.get_kind_display }}</td><td>{{ d.get_status_display }}</td>
+    <td class="num">{{ d.total|money }}</td><td class="num">{% if d.kind == "invoice" %}{{ d.balance_due|money }}{% endif %}</td>
+    <td><a href="{% url 'documents:pdf' d.pk %}" target="_blank">PDF</a></td></tr>
+  {% empty %}<tr><td colspan="8" class="muted">Nothing yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

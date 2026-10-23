@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <h1 style="margin:0">Settings</h1><span class="spacer"></span>
+  <a class="btn" href="{% url 'user_list' %}">Users and PINs</a>
+  <a class="btn" href="{% url 'catalog:quick_categories' %}">Quick-sale categories</a>
+  <a class="btn" href="{% url 'audit_log' %}">Audit log</a>
+  <a class="btn" href="{% url 'finance:backup' %}">Backup</a>
+  <a class="btn" href="/admin/">Admin</a>
+</div>
+<form method="post" enctype="multipart/form-data" class="stacked">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {% for title, fields in sections %}
+  <div class="panel">
+    <h2 style="margin-top:0">{{ title }}</h2>
+    <div class="form-grid">
+      {% for f in fields %}
+      <p>{{ f.label_tag }}{{ f }}{% if f.help_text %}<span class="helptext">{{ f.help_text }}</span>{% endif %}{{ f.errors }}</p>
+      {% endfor %}
+    </div>
+    {% if forloop.first and shop.logo %}<img src="{{ shop.logo.url }}" alt="Logo" style="max-height:80px">{% endif %}
+    {% if title == "Receipt printer" %}<button class="btn" type="submit" formaction="{% url 'sales:test_print' %}">Save and print test receipt</button>{% endif %}
+  </div>
+  {% endfor %}
+  <button class="btn primary big" type="submit">Save settings</button>
+</form>
+{% endblock %}

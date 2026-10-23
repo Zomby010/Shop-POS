@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Purchases{% endblock %}
+{% block content %}
+{% include "inventory/_nav.html" with tab="purchases" %}
+<div class="toolbar"><h1 style="margin:0">Purchases</h1><span class="spacer"></span><a class="btn primary" href="{% url 'inventory:purchase_new' %}">Receive stock</a></div>
+<table>
+  <tr><th>Purchase</th><th>Date</th><th>Supplier</th><th>Their ref</th><th class="num">Lines</th><th class="num">Total</th><th>By</th></tr>
+  {% for p in purchases %}
+  <tr><td><a href="{% url 'inventory:purchase_detail' p.pk %}">{{ p }}</a></td><td>{{ p.date }}</td><td>{{ p.supplier|default:"" }}</td><td>{{ p.supplier_reference }}</td><td class="num">{{ p.line_count }}</td><td class="num">{{ p.total|money }}</td><td>{{ p.user|default:"" }}</td></tr>
+  {% empty %}<tr><td colspan="7" class="muted">No purchases yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

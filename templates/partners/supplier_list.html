@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Suppliers{% endblock %}
+{% block content %}
+{% include "partners/_tabs.html" with tab="suppliers" %}
+<div class="toolbar"><h1 style="margin:0">Suppliers</h1><span class="spacer"></span>{% if is_owner %}<a class="btn primary" href="{% url 'partners:supplier_new' %}">Add supplier</a>{% endif %}</div>
+<form class="toolbar" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Name, contact or phone">
+  <label class="small"><input type="checkbox" name="inactive" value="1" {% if request.GET.inactive %}checked{% endif %}> Include inactive</label>
+  <button class="btn">Search</button>
+</form>
+<table>
+  <tr><th>Name</th><th>Contact</th><th>Phone</th><th>Email</th></tr>
+  {% for s in suppliers %}
+  <tr><td><a href="{% url 'partners:supplier_detail' s.pk %}">{{ s.name }}</a>{% if not s.active %} <span class="badge muted">inactive</span>{% endif %}</td><td>{{ s.contact_person }}</td><td>{{ s.phone }}</td><td>{{ s.email }}</td></tr>
+  {% empty %}<tr><td colspan="4" class="muted">No suppliers yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

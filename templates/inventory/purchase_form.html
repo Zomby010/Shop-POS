@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Receive stock{% endblock %}
+{% block content %}
+{% include "inventory/_nav.html" with tab="purchases" %}
+<h1>Receive stock</h1>
+<form method="post" class="stacked">
+  {% csrf_token %}
+  <div class="panel form-grid">
+    {% for f in form %}<p>{{ f.label_tag }}{{ f }}{{ f.errors }}</p>{% endfor %}
+  </div>
+  <div class="panel">
+    <p class="muted small">Loose goods can be received in packs: 2 sacks × 50 kg at KSh 9,000 a sack adds 100 kg at KSh 180/kg. For single items use 1 unit per pack.</p>
+    {{ formset.management_form }}{{ formset.non_form_errors }}
+    <table id="purchase-lines">
+      <tr><th>Product</th><th>Packs</th><th>Units per pack</th><th>Cost per pack (KSh)</th><th class="num">Adds</th><th class="num">Line total</th></tr>
+      {% for f in formset %}
+      <tr class="pl-row">
+        <td>{{ f.product }}{{ f.product.errors }}</td><td>{{ f.packs }}{{ f.packs.errors }}</td><td>{{ f.pack_size }}{{ f.pack_size.errors }}</td>
+        <td>{{ f.pack_cost }}{{ f.pack_cost.errors }}</td><td class="num pl-adds"></td><td class="num pl-total"></td>
+      </tr>
+      {% endfor %}
+      <tr><th colspan="5" class="num">Total</th><th class="num" id="pl-grand">0.00</th></tr>
+    </table>
+    <p class="muted small">Need more rows? Save this purchase and start another.</p>
+  </div>
+  <button class="btn primary big">Save purchase</button>
+</form>
+{% endblock %}
+{% block scripts %}<script>
+(function () {
+  const n = (el) => parseFloat(el?.value || "0") || 0;
+  function update() {
+    let grand = 0;
+    document.querySelectorAll(".pl-row").forEach((row) => {
+      const [packs, size, cost] = ["packs", "pack_size", "pack_cost"].map((f) => row.querySelector(`[name$="-${f}"]`));
+      const product = row.querySelector("select");
+      const unit = (product.selectedOptions[0]?.text.match(/\(([^)]+)\)$/) || [])[1] || "";
+      const has = product.value;
+      const total = n(packs) * n(cost);
+      row.querySelector(".pl-adds").textContent = has ? `${+(n(packs) * n(size)).toFixed(3)} ${unit} @ ${(n(cost) / (n(size) || 1)).toFixed(2)}` : "";
+      row.querySelector(".pl-total").textContent = has ? total.toFixed(2) : "";
+      if (has) grand += total;
+    });
+    document.getElementById("pl-grand").textContent = grand.toFixed(2);
+  }
+  document.getElementById("purchase-lines").addEventListener("input", update);
+  document.getElementById("purchase-lines").addEventListener("change", update);
+  update();
+})();
+</script>{% endblock %}

@@ -1,0 +1,4 @@
+<div class="toolbar">
+  {% if can_sell %}<a class="btn {% if tab == 'customers' %}primary{% endif %}" href="{% url 'partners:customer_list' %}">Customers (deni)</a>{% endif %}
+  {% if can_stock %}<a class="btn {% if tab == 'suppliers' %}primary{% endif %}" href="{% url 'partners:supplier_list' %}">Suppliers</a>{% endif %}
+</div>

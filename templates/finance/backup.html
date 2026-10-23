@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Backup{% endblock %}
+{% block content %}
+{% include "finance/_nav.html" %}
+<div class="toolbar">
+  <h1 style="margin:0">Backups</h1><span class="spacer"></span>
+  <form method="post">{% csrf_token %}<button class="btn primary big">Back up now</button></form>
+</div>
+<div class="panel">
+  <p>Backups go to <code>{{ folder }}</code>. {% if not shop.backup_folder %}Set a USB stick or a cloud-synced folder (Google Drive, OneDrive) in <a href="{% url 'settings' %}">Settings</a> so a copy survives if the laptop is lost.{% endif %}</p>
+  <p>Each evening from 6 pm the POS makes a backup by itself the first time it is used, and keeps the last {{ shop.backups_to_keep }}. {% if due %}<span class="badge warn">Tonight's backup is still due.</span>{% endif %}</p>
+</div>
+<table>
+  <tr><th>Backup</th><th class="num">Size</th><th></th></tr>
+  {% for b in backups %}
+  <tr><td>{{ b.name }}</td><td class="num">{{ b.stat.st_size|filesizeformat }}</td><td><a href="{% url 'finance:backup_download' b.name %}">Download</a></td></tr>
+  {% empty %}<tr><td colspan="3" class="muted">No backups yet.</td></tr>
+  {% endfor %}
+</table>
+<div class="panel" style="margin-top:1rem">
+  <h2 style="margin-top:0">Restoring a backup</h2>
+  <ol>
+    <li>Close the POS window (the black command window).</li>
+    <li>Open the backup zip. Copy <code>shoppos.sqlite3</code> into the POS's <code>data</code> folder, replacing the old file, and copy the <code>media</code> folder there too.</li>
+    <li>Start the POS again with <code>start_pos.bat</code>.</li>
+  </ol>
+</div>
+{% endblock %}

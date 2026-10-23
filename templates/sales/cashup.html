@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Cash-up{% endblock %}
+{% block content %}
+<h1>End-of-shift cash-up</h1>
+<p class="muted">Your sales since {{ expected.start|date:"d M H:i" }}: {{ expected.sales_count }} sale{{ expected.sales_count|pluralize }}.</p>
+<div class="grid">
+  <div class="panel">
+    <h2 style="margin-top:0">Cash drawer</h2>
+    <table>
+      <tr><td>Opening float</td><td class="num">{{ expected.opening_float|money }}</td></tr>
+      <tr><td>Cash sales</td><td class="num">{{ expected.cash_sales|money }}</td></tr>
+      <tr><td>Deni repaid in cash</td><td class="num">{{ expected.cash_repayments|money }}</td></tr>
+      <tr><td>Cash refunds</td><td class="num">−{{ expected.cash_refunds|money }}</td></tr>
+      <tr><td>Expenses paid from the drawer</td><td class="num">−{{ expected.cash_expenses|money }}</td></tr>
+      <tr><th>Expected cash</th><th class="num">{{ expected.expected_cash|money }}</th></tr>
+    </table>
+  </div>
+  <div class="panel">
+    <h2 style="margin-top:0">M-Pesa</h2>
+    <table>
+      <tr><td>M-Pesa sales</td><td class="num">{{ expected.mpesa_sales|money }}</td></tr>
+      <tr><td>Deni repaid by M-Pesa</td><td class="num">{{ expected.mpesa_repayments|money }}</td></tr>
+      <tr><td>M-Pesa refunds</td><td class="num">−{{ expected.mpesa_refunds|money }}</td></tr>
+      <tr><th>Expected M-Pesa</th><th class="num">{{ expected.expected_mpesa|money }}</th></tr>
+    </table>
+    <p class="muted small">Deni given today: {{ expected.credit_sales|money }} (no money received yet).</p>
+  </div>
+</div>
+<form method="get" class="toolbar">
+  <label>Opening float (cash you started with) <input name="opening_float" value="{{ opening_float }}" inputmode="decimal" size="8"></label>
+  <button class="btn small">Update expected cash</button>
+</form>
+<form method="post" class="panel stacked" style="max-width:520px">
+  {% csrf_token %}
+  <input type="hidden" name="opening_float" value="{{ opening_float }}">
+  <p><label>Cash counted in the drawer</label><input name="counted_cash" inputmode="decimal" required autofocus></p>
+  <p><label>M-Pesa received (from the M-Pesa statement)</label><input name="counted_mpesa" inputmode="decimal" required></p>
+  <p><label>Note</label><input name="note"></p>
+  <button class="btn primary big">Save cash-up</button>
+</form>
+{% endblock %}

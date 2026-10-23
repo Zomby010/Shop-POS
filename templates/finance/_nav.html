@@ -1,0 +1,9 @@
+<div class="toolbar">
+  <a class="btn {% if tab == 'profit' %}primary{% endif %}" href="{% url 'finance:reports' %}">Profit</a>
+  <a class="btn {% if tab == 'sales' %}primary{% endif %}" href="{% url 'finance:sales' %}">Sales report</a>
+  <a class="btn {% if tab == 'products' %}primary{% endif %}" href="{% url 'finance:products' %}">Best and slow sellers</a>
+  <a class="btn {% if tab == 'stock' %}primary{% endif %}" href="{% url 'finance:stock_value' %}">Stock value</a>
+  <a class="btn {% if tab == 'expenses' %}primary{% endif %}" href="{% url 'finance:expenses' %}">Expenses</a>
+  <a class="btn" href="{% url 'sales:cashup_list' %}">Cash-ups</a>
+  <a class="btn {% if tab == 'backup' %}primary{% endif %}" href="{% url 'finance:backup' %}">Backup</a>
+</div>

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Cash-ups{% endblock %}
+{% block content %}
+<h1>Cash-ups</h1>
+<table>
+  <tr><th>When</th><th>Cashier</th><th class="num">Expected cash</th><th class="num">Counted cash</th><th class="num">Cash diff</th><th class="num">Expected M-Pesa</th><th class="num">Counted M-Pesa</th><th class="num">M-Pesa diff</th></tr>
+  {% for r in records %}
+  <tr><td><a href="{% url 'sales:cashup_detail' r.pk %}">{{ r.period_end|date:"d M Y H:i" }}</a></td><td>{{ r.cashier }}</td>
+    <td class="num">{{ r.expected_cash|money }}</td><td class="num">{{ r.counted_cash|money }}</td><td class="num">{{ r.cash_difference|money }}</td>
+    <td class="num">{{ r.expected_mpesa|money }}</td><td class="num">{{ r.counted_mpesa|money }}</td><td class="num">{{ r.mpesa_difference|money }}</td></tr>
+  {% empty %}<tr><td colspan="8" class="muted">No cash-ups yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

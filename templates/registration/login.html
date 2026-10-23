@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<div class="panel login-box">
+  <h1>{% if shop.logo %}<img src="{{ shop.logo.url }}" alt="" style="height:40px;vertical-align:middle"> {% endif %}{{ shop.business_name }}</h1>
+  <form method="post" class="stacked">
+    {% csrf_token %}
+    {% if form.errors %}<p class="errorlist">Wrong username or password.</p>{% endif %}
+    <p><label for="id_username">Username</label>{{ form.username }}</p>
+    <p><label for="id_password">Password</label>{{ form.password }}</p>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="btn primary big" type="submit" style="width:100%">Log in</button>
+  </form>
+</div>
+{% endblock %}

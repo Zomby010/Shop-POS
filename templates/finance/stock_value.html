@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Stock value{% endblock %}
+{% block content %}
+{% include "finance/_nav.html" %}
+<div class="toolbar"><h1 style="margin:0">Stock value now</h1><span class="spacer"></span><a class="btn" href="?format=xlsx">Export to Excel</a></div>
+<table>
+  <tr><th>Category</th><th class="num">Products</th><th class="num">At cost</th><th class="num">At selling price</th><th class="num">Potential profit</th></tr>
+  {% for r in rows %}<tr><td>{{ r.category }}</td><td class="num">{{ r.products }}</td><td class="num">{{ r.at_cost|money }}</td><td class="num">{{ r.at_price|money }}</td><td class="num">{{ r.potential_profit|money }}</td></tr>{% endfor %}
+  <tr><th>Total</th><th class="num">{{ total.products }}</th><th class="num">{{ total.at_cost|money }}</th><th class="num">{{ total.at_price|money }}</th><th class="num">{{ total.potential_profit|money }}</th></tr>
+</table>
+{% endblock %}

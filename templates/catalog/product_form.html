@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{% if product.pk %}{{ product.name }}{% else %}Add product{% endif %}{% endblock %}
+{% block content %}
+<h1>{% if product.pk %}{{ product.name }} <span class="muted small">· {{ product.stock_qty|floatformat:"-3" }} {{ product.unit }} in stock</span>{% else %}Add product{% endif %}</h1>
+<form method="post" class="stacked">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="panel">
+    <div class="form-grid">
+      {% for f in form %}
+      <p>{{ f.label_tag }}{{ f }}{% if f.help_text %}<span class="helptext">{{ f.help_text }}</span>{% endif %}{{ f.errors }}</p>
+      {% endfor %}
+    </div>
+    <p class="muted small">Weight products are priced per kg and Volume products per litre. Loose items can then be sold by quantity (0.5 kg) or by amount (KSh 50).</p>
+  </div>
+
+  <div class="panel">
+    <h2 style="margin-top:0">Bulk price tiers</h2>
+    <p class="muted small">A lower unit price once one line reaches a quantity. Example: sugar 180 per kg, but 170 per kg from 10 kg.</p>
+    {{ tiers.management_form }}{{ tiers.non_form_errors }}
+    <table>
+      <tr><th>From quantity</th><th>Unit price (KSh)</th><th>Remove</th></tr>
+      {% for t in tiers %}
+      <tr>{% for hidden in t.hidden_fields %}{{ hidden }}{% endfor %}
+        <td>{{ t.min_qty }}{{ t.min_qty.errors }}</td><td>{{ t.unit_price }}{{ t.unit_price.errors }}</td><td>{% if t.instance.pk %}{{ t.DELETE }}{% endif %}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2 style="margin-top:0">Quick-sale buttons</h2>
+    <p class="muted small">Shown on the sell screen when this product has a quick-sale category. Write a quantity (1/4 kg, 500 g, 1/2 L) or an amount (KSh 50). A Custom button is always added.</p>
+    {{ presets.management_form }}{{ presets.non_form_errors }}
+    <table>
+      <tr><th>Button</th><th>Label (optional)</th><th>Order</th><th>Hide</th><th>Remove</th></tr>
+      {% for p in presets %}
+      <tr>{% for hidden in p.hidden_fields %}{{ hidden }}{% endfor %}
+        <td>{{ p.text }}{{ p.text.errors }}</td><td>{{ p.label }}</td><td>{{ p.order }}</td><td>{{ p.hidden }}</td><td>{% if p.instance.pk %}{{ p.DELETE }}{% endif %}</td></tr>
+      {% endfor %}
+    </table>
+    <p class="muted small">Need more rows? Save, and three new empty rows appear.</p>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn primary big" type="submit">Save</button>
+    {% if not product.pk %}<button class="btn big" type="submit" name="add_another" value="1">Save and add another</button>{% endif %}
+    <a class="btn" href="{% url 'catalog:product_list' %}">Cancel</a>
+  </div>
+</form>
+
+{% if movements %}
+<div class="panel">
+  <h2 style="margin-top:0">Recent stock movements</h2>
+  <table>
+    <tr><th>When</th><th>Type</th><th class="num">Quantity</th><th class="num">Unit cost</th><th>By</th><th>Reason / ref</th></tr>
+    {% for m in movements %}
+    <tr><td>{{ m.created_at|date:"d M Y H:i" }}</td><td>{{ m.get_kind_display }}</td><td class="num">{{ m.quantity|floatformat:"-3" }}</td><td class="num">{{ m.unit_cost }}</td><td>{{ m.user|default:"" }}</td><td>{{ m.reason }} {{ m.reference }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}
