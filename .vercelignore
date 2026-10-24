@@ -1,0 +1,9 @@
+data/
+docs/
+**/tests/
+**/__pycache__/
+*.sqlite3
+start_pos.bat
+conftest.py
+pytest.ini
+requirements-dev.txt

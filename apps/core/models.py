@@ -99,3 +99,15 @@ class Sequence(models.Model):
         seq.last += 1
         seq.save(update_fields=["last"])
         return seq.last
+
+
+class StoredFile(models.Model):
+    """An uploaded file (the logo) kept in the database when the POS runs online with no lasting disk."""
+
+    name = models.CharField(max_length=255, unique=True)
+    content = models.BinaryField()
+    size = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name

@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Prefetch, Q
@@ -191,7 +192,8 @@ def pay(request):
         response = HttpResponse(f'<p class="errorlist">{exc}</p>')
         response["HX-Retarget"] = "#pay-error"
         return response
-    error = receipt.print_receipt(sale) if ShopSettings.load().printer_connection != "none" else None
+    printer_on = ShopSettings.load().printer_connection != "none" and not settings.ONLINE
+    error = receipt.print_receipt(sale) if printer_on else None
     if error:
         messages.warning(request, f"The sale is saved, but the receipt did not print: {error}")
     url = f"/sell/receipt/{sale.pk}/?done=1"

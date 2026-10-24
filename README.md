@@ -49,6 +49,18 @@ After that the POS works fully offline.
 
 If a receipt fails to print, the sale is still saved. Use **Print receipt** to try again, or **Print from browser**.
 
+## Running online (Vercel)
+
+The laptop stays the till: it prints receipts and works without internet. An online copy on Vercel is for checking sales and reports from anywhere.
+
+1. Merge the code into `main`, then on vercel.com: Add New → Project → **Shop-POS** → Deploy (the first deploy may fail; that's fine).
+2. Storage → Create Database → **Neon** → Free, region Frankfurt → connect it to Shop-POS for all environments, with no prefix. This adds `DATABASE_URL`.
+3. Settings → Environment Variables: `SHOPPOS_SECRET_KEY` = a long random string (50+ characters, keep it private). Optional: `SHOPPOS_ALLOWED_HOSTS` and `SHOPPOS_CSRF_ORIGINS` if you add your own domain (defaults allow any `*.vercel.app` address).
+4. Deployments → Redeploy.
+5. On the laptop, in this folder, with the `DATABASE_URL` value from Vercel: `set DATABASE_URL=...`, then `python manage.py migrate` and `python manage.py setup_owner`. Run `migrate` the same way whenever a change includes database migrations.
+
+Online, the logo is stored in the database, the shop printer is off (print receipts from the browser) and folder backups are off (Neon keeps restore points). Every merge into `main` redeploys automatically.
+
 ## Run it for development
 
 ```bash

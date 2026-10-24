@@ -102,7 +102,8 @@ def _header(shop, document, styles):
     identity = []
     if shop.logo:
         try:
-            logo = Image(shop.logo.path)
+            with shop.logo.open("rb") as f:
+                logo = Image(BytesIO(f.read()))
             ratio = logo.imageWidth / float(logo.imageHeight)
             logo.drawHeight = 18 * mm
             logo.drawWidth = min(18 * mm * ratio, 45 * mm)

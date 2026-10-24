@@ -3,6 +3,7 @@
 import logging
 from dataclasses import dataclass
 
+from django.conf import settings
 from django.utils import timezone
 
 from apps.core.models import ShopSettings
@@ -142,6 +143,9 @@ class PrinterError(Exception):
 def open_printer(shop):
     from escpos import printer
 
+    if settings.ONLINE:
+        raise PrinterError("This copy of the POS runs online, so it can't reach the shop's printer. "
+                           "Use Print in the browser instead.")
     address = (shop.printer_address or "").strip()
     if shop.printer_connection == shop.Connection.USB:
         try:
@@ -181,7 +185,10 @@ def send_to_printer(rows, shop=None, with_logo=True):
         if with_logo and shop.logo:
             try:
                 device.set(align="center")
-                device.image(shop.logo.path, center=True)
+                from PIL import Image
+
+                with shop.logo.open("rb") as f:
+                    device.image(Image.open(f).copy(), center=True)
             except Exception:  # a logo problem must never stop the receipt
                 log.warning("Could not print logo", exc_info=True)
         _print_rows(device, rows, shop.receipt_chars)
