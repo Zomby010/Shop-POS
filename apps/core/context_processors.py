@@ -1,10 +1,13 @@
 from .models import ShopSettings
 from .roles import has_role, is_owner, CASHIER, STOCK_CLERK
 
+# Core pages that sit under People in the top menu
+PEOPLE_URLS = ("user_list", "user_edit", "user_new", "roles")
+
 
 def shop(request):
     user = getattr(request, "user", None)
-    ctx = {"shop": ShopSettings.load()}
+    ctx = {"shop": ShopSettings.load(), "people_urls": PEOPLE_URLS}
     if user is not None and user.is_authenticated:
         from apps.catalog.models import Product
 

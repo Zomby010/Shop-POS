@@ -1,7 +1,7 @@
 import pytest
 
 OWNER_PAGES = [
-    "/", "/settings/", "/settings/users/", "/settings/users/new/", "/settings/audit-log/",
+    "/", "/settings/", "/people/users/", "/people/users/new/", "/people/roles/", "/settings/audit-log/",
     "/products/", "/products/?low=1", "/products/new/", "/products/categories/",
     "/products/quick-sale-categories/", "/products/import/", "/products/import/template.xlsx",
 ]

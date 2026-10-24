@@ -19,6 +19,7 @@ class ShopSettingsForm(forms.ModelForm):
 class UserForm(forms.Form):
     username = forms.CharField(max_length=150)
     first_name = forms.CharField(max_length=150, required=False, label="Name")
+    email = forms.EmailField(required=False)
     role = forms.ChoiceField(choices=[(r, r) for r in ALL_ROLES])
     password = forms.CharField(
         widget=forms.PasswordInput, required=False, min_length=6,
@@ -52,6 +53,7 @@ class UserForm(forms.Form):
         data = self.cleaned_data
         user.username = data["username"]
         user.first_name = data["first_name"]
+        user.email = data["email"]
         user.is_active = data["is_active"]
         if data["password"]:
             user.set_password(data["password"])

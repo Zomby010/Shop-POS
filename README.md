@@ -27,7 +27,7 @@ After that the POS works fully offline.
 **First things to do as the owner**
 
 1. **Settings:** business name, logo, phone, KRA PIN and receipt footer. Choose the receipt printer and its paper width (58 or 80 mm), then press **Save and print test receipt**. Set a backup folder on a USB stick or a OneDrive/Google Drive folder.
-2. **Settings → Users and PINs:** add a login for each cashier.
+2. **People → System users:** add a login for each cashier.
 3. **Settings → Quick-sale categories:** add Rice, Beans, Cooking oil and so on.
 4. **Products → Import from Excel:** download the template, fill in your products, upload, check the preview and import. Loose goods use Sold by = Weight or Volume and list their buttons, e.g. `1/4 kg; 1/2 kg; 1 kg` or `KSh 50; KSh 100; 1/2 L`.
 5. Start selling from **Sell**.
@@ -79,7 +79,7 @@ Open http://localhost:8000 and log in. `seed_demo --users` creates:
 | cashier | cashier123 | Cashier |
 | stock | stock123 | Stock clerk |
 
-Change these passwords in Settings → Users before real use. For a clean shop without demo data, run `python manage.py createsuperuser` instead.
+Change these passwords in People → System users before real use. For a clean shop without demo data, run `python manage.py createsuperuser` instead.
 
 Shop data (database, logo, secret key) lives in the `data/` folder, which is not part of the code. Set `SHOPPOS_DATA_DIR` to keep it elsewhere.
 
@@ -111,7 +111,7 @@ Products → Import from Excel. Download the template, fill one row per product,
 | Cashier | Sell, hold and resume sales, print receipts, record deni, do their own cash-up |
 | Stock clerk | Receive purchases, recount, stock takes, view low stock |
 
-Every void and refund is written to the audit log (Settings → Audit log).
+People → Roles and privileges lists every privilege and which role has it. Every void and refund is written to the audit log (Settings → Audit log).
 
 ### Selling
 
@@ -147,9 +147,17 @@ Stock in the top bar (owners and stock clerks).
 - **Loose-goods loss report** (owner): for rice, beans, oil and other weighed goods, expected against counted kg/L over approved stock takes, plus recorded losses, as a share of what was sold.
 - **Low stock:** a reorder list of products at or below their alert level, with the reorder quantity set on each product, the estimated cost and the last supplier, downloadable to Excel. Out-of-stock and low badges also show on Products and the sell screen.
 
-### Suppliers, invoices and quotations
+### People
 
-- **Suppliers** (Customers & suppliers → Suppliers): add, edit and deactivate suppliers, and see each one's purchase history and what the shop still owes them.
+**People** in the top bar has four tabs. Customers and suppliers open for the roles that use them; System users and Roles and privileges are for the owner.
+
+- **Customers:** the deni list, with what customers owe you in total and what overpaid customers are owed back. Columns show phone, email, KRA PIN, balance, credit limit and total spent (every completed sale, including deni sales, less refunds). Filter by has balance, has overpayment or no balance, search by name, phone or email, and **Download Excel**. A new customer can carry an **opening balance**, the deni they owed before this system; it becomes the first line of their deni statement. A customer's page shows their deni statement, recent sales, a repayment form and New invoice / New quotation.
+- **Suppliers:** with the total you owe them, KRA PIN, a has balance / nothing owed filter, **Download Excel** and a **New purchase** button that opens Receive stock with the supplier picked. Add, edit and deactivate suppliers, and see each one's purchase history and what the shop still owes them.
+- **System users:** the people who log in, with their role, email, today's sales, PIN status and whether they can log in.
+- **Roles and privileges:** what the Owner, Cashier and Stock clerk roles can each do, area by area, and which steps need the owner's PIN.
+
+### Invoices and quotations
+
 - **Invoices and quotations** (owner): prepare them for a customer, a supplier or a one-off name. Tick **Bulk order** and product lines with a blank price take the bulk tier price for their quantity. Lines can also be free text (delivery, services).
 - Each document is numbered (INV-0001, QUO-0001) and opens as a PDF with the business name and logo from Settings, ready to print, save or send. A quotation converts into an invoice in one click, and invoices track payments (draft, sent, partly paid, paid).
 

@@ -2,13 +2,13 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Sum
+from django.db.models import Count, Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .forms import ShopSettingsForm, UserForm
 from .models import AuditLog, ShopSettings, UserProfile
-from .roles import OWNER, is_owner, owner_required, user_roles
+from .roles import ALL_ROLES, OWNER, PRIVILEGES, is_owner, owner_required, user_roles
 
 
 def dashboard(request):
@@ -54,10 +54,21 @@ def settings_view(request):
 
 @owner_required
 def user_list(request):
+    from apps.sales.models import Sale
+    from apps.sales.services import start_of_day
+
     User = get_user_model()
-    users = User.objects.order_by("username").prefetch_related("groups")
+    today = Sale.objects.filter(status=Sale.Status.COMPLETED, completed_at__gte=start_of_day())
+    users = (User.objects.order_by("username").select_related("profile").prefetch_related("groups")
+             .annotate(sales_today=Count("sales", filter=Q(sales__in=today)),
+                       takings_today=Sum("sales__total", filter=Q(sales__in=today))))
     rows = [(u, ", ".join(sorted(user_roles(u))) or ("Owner (superuser)" if u.is_superuser else "None")) for u in users]
     return render(request, "core/user_list.html", {"rows": rows})
+
+
+@owner_required
+def roles_view(request):
+    return render(request, "core/roles.html", {"privileges": PRIVILEGES, "roles": ALL_ROLES})
 
 
 @owner_required
@@ -70,6 +81,7 @@ def user_edit(request, pk=None):
         initial = {
             "username": instance.username,
             "first_name": instance.first_name,
+            "email": instance.email,
             "role": next(iter(roles), OWNER if instance.is_superuser else ""),
             "is_active": instance.is_active,
         }

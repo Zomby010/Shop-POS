@@ -1,17 +1,20 @@
 {% extends "base.html" %}
-{% block title %}Users{% endblock %}
+{% load shop_tags %}
+{% block title %}System users{% endblock %}
 {% block content %}
-<div class="toolbar"><h1 style="margin:0">Users</h1><span class="spacer"></span><a class="btn primary" href="{% url 'user_new' %}">Add user</a></div>
+{% include "partners/_tabs.html" with tab="users" %}
+<div class="toolbar"><h1 style="margin:0">System users</h1><span class="spacer"></span><a class="btn primary" href="{% url 'user_new' %}">Add user</a></div>
 <table>
-  <tr><th>Username</th><th>Name</th><th>Role</th><th>Owner PIN</th><th>Status</th></tr>
+  <tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th class="num">Sales today</th><th>Owner PIN</th><th>Status</th></tr>
   {% for u, roles in rows %}
   <tr>
     <td><a href="{% url 'user_edit' u.pk %}">{{ u.username }}</a></td>
-    <td>{{ u.first_name }}</td><td>{{ roles }}</td>
+    <td>{{ u.first_name }}</td><td>{{ u.email }}</td><td>{{ roles }}</td>
+    <td class="num">{% if u.sales_today %}<a href="{% url 'sales:history' %}?cashier={{ u.pk }}">{{ u.sales_today }} · KSh {{ u.takings_today|money }}</a>{% else %}<span class="muted">0</span>{% endif %}</td>
     <td>{% if u.profile.pin_hash %}<span class="badge ok">Set</span>{% else %}<span class="badge muted">None</span>{% endif %}</td>
     <td>{% if u.is_active %}Active{% else %}<span class="muted">Disabled</span>{% endif %}</td>
   </tr>
   {% endfor %}
 </table>
-<p class="muted small">Cashiers sell, hold sales, print receipts, record deni and do their own cash-up. Stock clerks receive stock and count it. Owners can do everything, and their PIN approves voids and refunds.</p>
+<p class="muted small">Only system users can log in. Each one has a single role; see <a href="{% url 'roles' %}">Roles and privileges</a> for exactly what each role can do. To stop someone logging in, untick "Can log in" on their page.</p>
 {% endblock %}

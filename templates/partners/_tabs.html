@@ -1,4 +1,6 @@
 <div class="toolbar tabs">
-  {% if can_sell %}<a class="btn {% if tab == 'customers' %}primary{% endif %}" href="{% url 'partners:customer_list' %}">Customers (deni)</a>{% endif %}
+  {% if can_sell %}<a class="btn {% if tab == 'customers' %}primary{% endif %}" href="{% url 'partners:customer_list' %}">Customers</a>{% endif %}
   {% if can_stock %}<a class="btn {% if tab == 'suppliers' %}primary{% endif %}" href="{% url 'partners:supplier_list' %}">Suppliers</a>{% endif %}
+  {% if is_owner %}<a class="btn {% if tab == 'users' %}primary{% endif %}" href="{% url 'user_list' %}">System users</a>
+  <a class="btn {% if tab == 'roles' %}primary{% endif %}" href="{% url 'roles' %}">Roles and privileges</a>{% endif %}
 </div>

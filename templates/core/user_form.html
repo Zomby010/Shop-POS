@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{% if instance %}Edit {{ instance.username }}{% else %}Add user{% endif %}{% endblock %}
 {% block content %}
+{% include "partners/_tabs.html" with tab="users" %}
 <h1>{% if instance %}Edit {{ instance.username }}{% else %}Add user{% endif %}</h1>
 <form method="post" class="stacked panel" style="max-width:520px">
   {% csrf_token %}
