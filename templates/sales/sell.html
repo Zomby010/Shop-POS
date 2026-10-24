@@ -7,7 +7,7 @@
 <div class="sell" data-owner="{{ is_owner|yesno:'1,0' }}">
   <section class="sell-left">
     <form id="scan-form" hx-post="{% url 'sales:scan' %}" hx-target="#cart" hx-swap="innerHTML"
-          hx-on::after-request="this.reset(); document.getElementById('scan').focus()">
+          hx-on::after-request="this.reset(); window.focusScan && focusScan()">
       <input id="scan" name="code" autocomplete="off" autofocus
              placeholder="Scan barcode or type a name · 12*barcode for 12 pieces">
     </form>
@@ -56,10 +56,11 @@
     {% endfor %}
   </section>
 </div>
+<button type="button" class="mobile-pay" id="mobile-pay" hidden><span id="mobile-pay-count"></span><strong id="mobile-pay-total"></strong><span class="mp-go">Pay</span></button>
 
 <dialog id="custom-dialog">
   <form id="custom-form" hx-post="{% url 'sales:add' %}" hx-target="#cart"
-        hx-on::after-request="document.getElementById('custom-dialog').close(); document.getElementById('scan').focus()">
+        hx-on::after-request="document.getElementById('custom-dialog').close(); window.focusScan && focusScan()">
     <h2 id="custom-title" style="margin-top:0">Custom</h2>
     <input type="hidden" name="product" id="custom-product">
     <div class="toolbar" id="custom-modes">
@@ -75,7 +76,7 @@
 <dialog id="pay-dialog">
   <form id="pay-form" hx-post="{% url 'sales:pay' %}" hx-target="#pay-error" autocomplete="off">
     <h2 style="margin-top:0">Payment · <span id="pay-total">KSh 0.00</span></h2>
-    <div class="toolbar">
+    <div class="toolbar pay-modes">
       <button type="button" class="btn" data-pay-mode="cash">All cash</button>
       <button type="button" class="btn" data-pay-mode="mpesa">All M-Pesa</button>
       <button type="button" class="btn" data-pay-mode="split">Split</button>
