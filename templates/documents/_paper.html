@@ -13,7 +13,7 @@
     <div>
       <div class="dp-label">{% if document.kind == "quotation" %}Quotation for{% else %}Bill to{% endif %}</div>
       <div class="dp-party">{{ document.party_display|default:"-" }}</div>
-      <div class="dp-muted">{% with p=document.party %}{% if p %}{% if p.contact_person %}{{ p.contact_person }}<br>{% endif %}{% if p.phone %}{{ p.phone }}<br>{% endif %}{% if p.email %}{{ p.email }}<br>{% endif %}{% if p.address %}{{ p.address }}{% endif %}{% else %}{{ document.party_details }}{% endif %}{% endwith %}</div>
+      <div class="dp-muted">{% with p=document.party %}{% if p %}{% if p.contact_person %}{{ p.contact_person }}<br>{% endif %}{% if p.phone %}{{ p.phone }}<br>{% endif %}{% if p.email %}{{ p.email }}<br>{% endif %}{% if p.address %}{{ p.address }}<br>{% endif %}{% if p.kra_pin %}KRA PIN {{ p.kra_pin }}{% endif %}{% else %}{{ document.party_details }}{% endif %}{% endwith %}</div>
     </div>
     <div>
       <div class="dp-label">Details</div>

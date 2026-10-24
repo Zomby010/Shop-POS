@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Roles and privileges{% endblock %}
+{% block content %}
+{% include "partners/_tabs.html" with tab="roles" %}
+<h1>Roles and privileges</h1>
+<p class="muted">Every system user has one role. This is exactly what each role can do in this POS. The owner's PIN lets a cashier finish a sensitive step without handing over the owner's login.</p>
+<table class="privileges">
+  <tr><th>Privilege</th>{% for r in roles %}<th>{{ r }}</th>{% endfor %}</tr>
+  {% for area, rows in privileges %}
+  <tr class="area"><td colspan="{{ roles|length|add:1 }}">{{ area }}</td></tr>
+  {% for name, owner, cashier, clerk in rows %}
+  <tr><td>{{ name }}</td>{% include "core/_privilege.html" with v=owner %}{% include "core/_privilege.html" with v=cashier %}{% include "core/_privilege.html" with v=clerk %}</tr>
+  {% endfor %}
+  {% endfor %}
+</table>
+<h2>Keep these with the owner</h2>
+<p>Voids and refunds, price changes, cancelling purchases, approving stock takes, adding users and setting PINs can move money or hide losses. Only the owner can do them, or a cashier with the owner's PIN for voids, refunds and removing cart lines. Voids, refunds and cart removals go in the <a href="{% url 'audit_log' %}">audit log</a> with who approved them. Price changes are kept in each product's price history, and a cancelled purchase keeps who cancelled it and why.</p>
+{% endblock %}

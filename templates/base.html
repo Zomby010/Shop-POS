@@ -20,11 +20,11 @@
     {% endwith %}
     <a href="{% url 'catalog:product_list' %}" class="{% if s == 'catalog' %}active{% endif %}">Products{% if low_stock_count %} <span class="badge warn" title="Low stock">{{ low_stock_count }}</span>{% endif %}</a>
     {% if can_stock %}<a href="{% url 'inventory:home' %}" class="{% if s == 'inventory' %}active{% endif %}">Stock</a>{% endif %}
-    {% if can_sell %}<a href="{% url 'partners:customer_list' %}" class="{% if s == 'partners' %}active{% endif %}">Customers &amp; suppliers</a>{% endif %}
+    {% if can_sell or can_stock %}<a href="{% if can_sell %}{% url 'partners:customer_list' %}{% else %}{% url 'partners:supplier_list' %}{% endif %}" class="{% if s == 'partners' or request.resolver_match.url_name in people_urls %}active{% endif %}">People</a>{% endif %}
     {% if is_owner %}
       <a href="{% url 'documents:list' %}" class="{% if s == 'documents' %}active{% endif %}">Invoices &amp; quotes</a>
       <a href="{% url 'finance:reports' %}" class="{% if s == 'finance' %}active{% endif %}">Reports</a>
-      <a href="{% url 'settings' %}" class="{% if request.resolver_match.url_name == 'settings' or request.resolver_match.url_name == 'user_list' %}active{% endif %}">Settings</a>
+      <a href="{% url 'settings' %}" class="{% if request.resolver_match.url_name == 'settings' or request.resolver_match.url_name == 'audit_log' %}active{% endif %}">Settings</a>
     {% endif %}
     {% endwith %}
   </nav>

@@ -4,21 +4,28 @@
 {% block content %}
 {% include "partners/_tabs.html" with tab="customers" %}
 <div class="toolbar">
-  <h1 style="margin:0">Customers</h1><span class="badge warn">KSh {{ total_owed|money }} owed</span><span class="spacer"></span>
+  <h1 style="margin:0">Customers</h1><span class="spacer"></span>
+  <a class="btn" href="?{% if q %}q={{ q|urlencode }}&{% endif %}balance={{ balance }}&format=xlsx">Download Excel</a>
   <a class="btn primary" href="{% url 'partners:customer_new' %}">Add customer</a>
 </div>
+<div class="grid" style="margin-bottom:1rem">
+  <div class="stat"><div class="label">Customers owe you</div><div class="value">KSh {{ total_owed|money }}</div></div>
+  <div class="stat"><div class="label">Overpaid (you owe them)</div><div class="value">KSh {{ total_overpaid|money }}</div></div>
+</div>
 <form class="toolbar" method="get">
-  <input type="search" name="q" value="{{ q }}" placeholder="Name or phone">
-  <label class="small"><input type="checkbox" name="owing" value="1" {% if request.GET.owing %}checked{% endif %}> Only those who owe</label>
+  <input type="search" name="q" value="{{ q }}" placeholder="Name, phone or email">
+  <select name="balance">{% for value, label in balance_filters %}<option value="{{ value }}" {% if value == balance %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
   <button class="btn">Search</button>
 </form>
 <table>
-  <tr><th>Name</th><th>Phone</th><th class="num">Owes</th><th class="num">Credit limit</th></tr>
+  <tr><th>Name</th><th>Phone</th><th>Email</th><th>KRA PIN</th><th class="num">Balance</th><th class="num">Credit limit</th><th class="num">Total spent</th></tr>
   {% for c in customers %}
-  <tr><td><a href="{% url 'partners:customer_detail' c.pk %}">{{ c.name }}</a>{% if not c.active %} <span class="badge muted">inactive</span>{% endif %}</td><td>{{ c.phone }}</td>
-    <td class="num">{% if c.balance > 0 %}<strong>{{ c.balance|money }}</strong>{% else %}{{ c.balance|money }}{% endif %}</td>
-    <td class="num">{% if c.credit_limit is not None %}{{ c.credit_limit|money }}{% else %}<span class="muted">none</span>{% endif %}</td></tr>
-  {% empty %}<tr><td colspan="4" class="muted">No customers yet. Customers are added when you sell on deni, or here.</td></tr>
+  <tr><td><a href="{% url 'partners:customer_detail' c.pk %}">{{ c.name }}</a>{% if not c.active %} <span class="badge muted">inactive</span>{% endif %}</td>
+    <td>{{ c.phone }}</td><td>{{ c.email }}</td><td>{{ c.kra_pin }}</td>
+    <td class="num">{% if c.balance > 0 %}<strong>{{ c.balance|money }}</strong> <span class="muted small">owes you</span>{% elif c.balance < 0 %}<span class="badge ok">{{ c.balance|money }} overpaid</span>{% else %}{{ c.balance|money }}{% endif %}</td>
+    <td class="num">{% if c.credit_limit is not None %}{{ c.credit_limit|money }}{% else %}<span class="muted">none</span>{% endif %}</td>
+    <td class="num">{{ c.spent|money }}</td></tr>
+  {% empty %}<tr><td colspan="7" class="muted">No customers found. Customers are added when you sell on deni, or here.</td></tr>
   {% endfor %}
 </table>
 {% endblock %}

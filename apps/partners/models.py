@@ -30,6 +30,7 @@ class Customer(models.Model):
     phone = models.CharField(max_length=50, blank=True, db_index=True)
     email = models.EmailField(blank=True)
     address = models.CharField(max_length=200, blank=True)
+    kra_pin = models.CharField("KRA PIN", max_length=30, blank=True, help_text="Printed on invoices")
     credit_limit = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True, help_text="Leave blank for no limit"
     )

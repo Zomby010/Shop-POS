@@ -10,9 +10,18 @@
   <a class="btn" href="{% url 'documents:new' %}?kind=quotation&party_type=customer&customer={{ customer.pk }}">New quotation</a>{% endif %}
 </div>
 <div class="grid">
-  <div class="stat"><div class="label">Owes</div><div class="value">KSh {{ customer.balance|money }}</div></div>
-  <div class="stat"><div class="label">Credit limit</div><div class="value">{% if customer.credit_limit is not None %}KSh {{ customer.credit_limit|money }}{% else %}None{% endif %}</div></div>
+  <div class="stat"><div class="label">{% if customer.balance < 0 %}Overpaid{% else %}Owes{% endif %}</div><div class="value">KSh {{ customer.balance|money }}</div></div>
+  <div class="stat"><div class="label">Credit limit</div><div class="value">{% if customer.credit_limit is not None %}KSh {{ customer.credit_limit|money }}{% else %}None{% endif %}</div>{% if customer.available_credit is not None %}<div class="sub">KSh {{ customer.available_credit|money }} left</div>{% endif %}</div>
+  <div class="stat"><div class="label">Total spent</div><div class="value">KSh {{ spent|money }}</div><div class="sub">All sales, after refunds</div></div>
 </div>
+{% if customer.email or customer.address or customer.kra_pin or customer.notes %}
+<div class="panel" style="margin-top:1rem">
+  {% if customer.email %}<p style="margin:.2rem 0">{{ customer.email }}</p>{% endif %}
+  {% if customer.address %}<p style="margin:.2rem 0">{{ customer.address }}</p>{% endif %}
+  {% if customer.kra_pin %}<p style="margin:.2rem 0">KRA PIN {{ customer.kra_pin }}</p>{% endif %}
+  {% if customer.notes %}<p class="muted" style="margin:.2rem 0">{{ customer.notes|linebreaksbr }}</p>{% endif %}
+</div>
+{% endif %}
 <form method="post" class="panel toolbar" style="margin-top:1rem">
   {% csrf_token %}
   <strong>Record repayment</strong>
@@ -20,6 +29,7 @@
   <button class="btn primary">Save repayment</button>
   {{ form.errors }}
 </form>
+<h2>Deni statement</h2>
 <table>
   <tr><th>When</th><th>Type</th><th>Receipt</th><th>Method</th><th>Note</th><th>By</th><th class="num">Amount</th></tr>
   {% for e in entries %}
@@ -28,6 +38,14 @@
     <td>{{ e.get_method_display }}</td><td>{{ e.note }}</td><td>{{ e.user|default:"" }}</td>
     <td class="num">{% if e.kind == "repayment" %}−{% endif %}{{ e.amount|money }}</td></tr>
   {% empty %}<tr><td colspan="7" class="muted">No deni history.</td></tr>
+  {% endfor %}
+</table>
+<h2>Recent sales</h2>
+<table>
+  <tr><th>Receipt</th><th>When</th><th>Cashier</th><th>Status</th><th class="num">Total</th></tr>
+  {% for s in sales %}
+  <tr><td><a href="{% url 'sales:sale_detail' s.pk %}">{{ s.receipt_no }}</a></td><td>{{ s.completed_at|date:"d M Y H:i" }}</td><td>{{ s.cashier }}</td><td>{{ s.get_status_display }}</td><td class="num">{{ s.total|money }}</td></tr>
+  {% empty %}<tr><td colspan="5" class="muted">No sales to this customer yet.</td></tr>
   {% endfor %}
 </table>
 {% endblock %}

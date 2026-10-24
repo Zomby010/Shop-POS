@@ -74,7 +74,7 @@ def test_settings_page_owner_only(owner_client, client, cashier):
 
 @pytest.mark.django_db
 def test_owner_creates_cashier_with_role(owner_client, django_user_model):
-    response = owner_client.post("/settings/users/new/", {
+    response = owner_client.post("/people/users/new/", {
         "username": "jane", "first_name": "Jane", "role": "Cashier", "password": "secret12", "is_active": "on",
     })
     assert response.status_code == 302
