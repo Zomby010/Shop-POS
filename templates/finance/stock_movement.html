@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Stock movement{% endblock %}
+{% block content %}
+{% include "finance/_nav.html" %}
+<h1>Stock movement</h1>
+<p class="muted">Where each item's stock went. Opening is everything up to the start date, including opening stock entered when setting up, so every row adds up: opening plus the movements equals closing.</p>
+{% include "finance/_range.html" %}
+<form class="toolbar" method="get">
+  <input type="hidden" name="start" value="{{ start }}"><input type="hidden" name="end" value="{{ end }}">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search item"><button class="btn">Search</button>
+  <span class="spacer"></span><strong>Stock value at cost: KSh {{ total_value|money }}</strong>
+</form>
+<div class="table-wrap"><table class="small-table">
+  <tr><th>Product</th><th class="num">Opening</th>{% for key, label in columns %}<th class="num">{{ label }}</th>{% endfor %}<th class="num">Closing</th><th class="num">Unit cost</th><th class="num">Value</th></tr>
+  {% for r in rows %}
+  <tr><td><a href="{% url 'inventory:product_history' r.product.pk %}?start={{ start }}&end={{ end }}">{{ r.product.name }}</a> <span class="muted small">{{ r.product.unit }}</span></td>
+    <td class="num">{{ r.opening|qty }}</td>
+    {% for v in r.cells %}<td class="num{% if not v %} muted{% endif %}">{% if v %}{% if v > 0 %}+{% endif %}{{ v|qty }}{% else %}·{% endif %}</td>{% endfor %}
+    <td class="num"><strong>{{ r.closing|qty }}</strong></td><td class="num">{{ r.product.cost_price|money }}</td><td class="num">{{ r.value|money }}</td></tr>
+  {% empty %}<tr><td colspan="13" class="muted">No products match.</td></tr>
+  {% endfor %}
+</table></div>
+<p class="muted small">New stock is opening stock added for new products. Purchased is net of cancelled purchases. Count changes come from recounts and stock takes. Value uses today's average cost.</p>
+{% endblock %}

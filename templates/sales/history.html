@@ -4,23 +4,63 @@
 {% block content %}
 <div class="toolbar">
   <h1 style="margin:0">Sales</h1><span class="spacer"></span>
-  {% if is_owner %}<a class="btn" href="{% url 'sales:cashup_list' %}">Cash-ups</a>{% endif %}
-  <a class="btn" href="{% url 'sales:sell' %}">Back to selling</a>
+  {% if is_owner %}<a class="btn" href="{% url 'finance:reports' %}?start={{ start }}&end={{ end }}">Summary report</a><a class="btn" href="{% url 'sales:cashup_list' %}">Cash-ups</a>{% endif %}
+  <a class="btn" href="{% url 'sales:cashup' %}">Cash-up</a>
+  <a class="btn primary" href="{% url 'sales:sell' %}">Back to selling</a>
 </div>
-<form class="toolbar" method="get">
-  <input type="date" name="day" value="{{ day }}">
-  <input type="search" name="q" value="{{ q }}" placeholder="Receipt number or customer">
-  <button class="btn">Show</button>
+<form method="get" class="panel sales-filters">
+  <div class="toolbar periods">
+    {% for value, label in periods %}<button class="btn small {% if period == value %}primary{% endif %}" name="period" value="{{ value }}">{{ label }}</button>{% endfor %}
+  </div>
+  <div class="toolbar" style="margin-bottom:0">
+    <label>From <input type="date" name="start" value="{{ start }}"></label>
+    <label>To <input type="date" name="end" value="{{ end }}"></label>
+    <select name="method" aria-label="Payment">
+      <option value="">Any payment</option>
+      <option value="cash"{% if method == "cash" %} selected{% endif %}>Cash only</option>
+      <option value="mpesa"{% if method == "mpesa" %} selected{% endif %}>M-Pesa only</option>
+      <option value="credit"{% if method == "credit" %} selected{% endif %}>On deni</option>
+      <option value="split"{% if method == "split" %} selected{% endif %}>Split payment</option>
+    </select>
+    <select name="status" aria-label="Status">
+      <option value="">Any status</option>
+      <option value="paid"{% if status == "paid" %} selected{% endif %}>No refunds</option>
+      <option value="refunded"{% if status == "refunded" %} selected{% endif %}>Part refunded</option>
+      <option value="voided"{% if status == "voided" %} selected{% endif %}>Voided</option>
+    </select>
+    {% if cashiers %}<select name="cashier" aria-label="Cashier"><option value="">All cashiers</option>{% for u in cashiers %}<option value="{{ u.pk }}"{% if cashier == u.pk|stringformat:"s" %} selected{% endif %}>{{ u.get_full_name|default:u.username }}</option>{% endfor %}</select>{% endif %}
+    <input type="search" name="q" value="{{ q }}" placeholder="Receipt no., customer or M-Pesa code">
+    <button class="btn">Show</button>
+    <span class="spacer"></span>
+    <a class="btn" href="?{{ query }}{% if query %}&{% endif %}format=xlsx">Download Excel</a>
+  </div>
 </form>
-<table>
-  <tr><th>Receipt</th><th>Time</th><th>Cashier</th><th>Paid by</th><th class="num">Total</th><th></th></tr>
+<div class="grid sales-totals">
+  <div class="stat"><div class="label">Sales</div><div class="value">{{ totals.count }}</div></div>
+  <div class="stat"><div class="label">Total</div><div class="value">{{ totals.total|money }}</div>{% if totals.refunded %}<div class="sub">{{ totals.net|money }} after {{ totals.refunded|money }} refunds</div>{% endif %}</div>
+  <div class="stat"><div class="label">Cash</div><div class="value">{{ totals.cash|money }}</div></div>
+  <div class="stat"><div class="label">M-Pesa</div><div class="value">{{ totals.mpesa|money }}</div></div>
+  <div class="stat"><div class="label">Deni</div><div class="value">{{ totals.credit|money }}</div></div>
+</div>
+<div class="table-wrap" style="margin-top:1rem"><table>
+  <tr><th>Receipt</th><th>Time</th><th class="num">Items</th><th class="num">Total</th><th>Paid by</th><th class="num">Refunded</th><th>Customer</th><th>Cashier</th><th>Status</th><th></th></tr>
   {% for s in page %}
-  <tr><td><a href="{% url 'sales:receipt' s.pk %}">{{ s.receipt_no }}</a>{% if s.status == "voided" %} <span class="badge danger">voided</span>{% endif %}</td>
-    <td>{{ s.completed_at|date:"d M H:i" }}</td><td>{{ s.cashier }}</td>
-    <td>{% for p in s.payments.all %}{{ p.get_method_display }} {{ p.amount|money }}{% if not forloop.last %} · {% endif %}{% endfor %}{% if s.customer %} ({{ s.customer.name }}){% endif %}</td>
-    <td class="num">{{ s.total|money }}</td>
-    <td><a href="{% url 'sales:sale_detail' s.pk %}">Refund or void</a></td></tr>
-  {% empty %}<tr><td colspan="6" class="muted">No sales.</td></tr>
+  <tr><td><a href="{% url 'sales:sale_detail' s.pk %}">{{ s.receipt_no }}</a></td>
+    <td>{{ s.completed_at|date:"d M H:i" }}</td><td class="num">{{ s.item_count }}</td><td class="num"><strong>{{ s.total|money }}</strong></td>
+    <td class="small">{% if s.cash %}Cash {{ s.cash|money }}<br>{% endif %}{% if s.mpesa %}M-Pesa {{ s.mpesa|money }}{% if s.mpesa_code %} <span class="muted">{{ s.mpesa_code }}</span>{% endif %}<br>{% endif %}{% if s.credit %}Deni {{ s.credit|money }}{% endif %}</td>
+    <td class="num">{% if s.refunded %}{{ s.refunded|money }}{% endif %}</td>
+    <td>{{ s.customer.name|default:"" }}</td><td>{{ s.cashier }}</td>
+    <td>{% if s.state == "Voided" %}<span class="badge danger">Voided</span>{% elif s.state == "Part refunded" %}<span class="badge warn">Part refunded</span>{% elif s.state == "On deni" %}<span class="badge warn">On deni</span>{% else %}<span class="badge ok">Paid</span>{% endif %}</td>
+    <td class="small"><a href="{% url 'sales:receipt' s.pk %}">Receipt</a>{% if s.status == "completed" %} · <a href="{% url 'sales:sale_detail' s.pk %}">Refund</a>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="10" class="muted">No sales match.</td></tr>
   {% endfor %}
-</table>
+</table></div>
+{% if page.paginator.num_pages > 1 %}
+<div class="toolbar" style="margin-top:1rem">
+  {% if page.has_previous %}<a class="btn" href="?{{ query }}&page={{ page.previous_page_number }}">Newer</a>{% endif %}
+  <span class="muted">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}<a class="btn" href="?{{ query }}&page={{ page.next_page_number }}">Older</a>{% endif %}
+</div>
+{% endif %}
+{% if not is_owner %}<p class="muted small">You see your own sales.</p>{% endif %}
 {% endblock %}

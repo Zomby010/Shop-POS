@@ -169,7 +169,7 @@ def plan_payment(total, *, cash_tendered=None, mpesa=None, credit=None):
 
 
 @transaction.atomic
-def complete_sale(cart, *, user, cash_tendered=None, mpesa=None, credit=None, customer=None):
+def complete_sale(cart, *, user, cash_tendered=None, mpesa=None, credit=None, customer=None, mpesa_code=""):
     cart = Sale.objects.select_for_update().get(pk=cart.pk)
     if not cart.is_editable:
         raise SaleError("This sale is already finished.")
@@ -205,7 +205,8 @@ def complete_sale(cart, *, user, cash_tendered=None, mpesa=None, credit=None, cu
     for method, amount in ((Payment.Method.CASH, plan.cash), (Payment.Method.MPESA, plan.mpesa),
                            (Payment.Method.CREDIT, plan.credit)):
         if amount > ZERO:
-            Payment.objects.create(sale=cart, method=method, amount=amount)
+            reference = (mpesa_code or "").strip().upper()[:30] if method == Payment.Method.MPESA else ""
+            Payment.objects.create(sale=cart, method=method, amount=amount, reference=reference)
     if plan.credit > ZERO:
         CreditEntry.objects.create(customer=customer, kind=CreditEntry.Kind.CHARGE, amount=plan.credit, sale=cart,
                                    user=user, note=f"Receipt {cart.receipt_no}")

@@ -171,3 +171,90 @@ def test_setup_owner_command(monkeypatch, django_user_model):
     assert owner.check_password("secret12") and owner.profile.check_pin("4321")
     call_command("setup_owner")  # does nothing once a user exists
     assert django_user_model.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_period_presets():
+    today = timezone.localdate().replace(year=2026, month=10, day=24)  # a Saturday
+    assert reports.period_range("yesterday", today) == (today - timedelta(days=1),) * 2
+    assert reports.period_range("this_week", today)[0].isoformat() == "2026-10-19"
+    assert reports.period_range("last_week", today) == (timezone.datetime(2026, 10, 12).date(),
+                                                         timezone.datetime(2026, 10, 18).date())
+    assert reports.period_range("last_month", today)[0].isoformat() == "2026-09-01"
+    assert reports.period_range("last_month", today)[1].isoformat() == "2026-09-30"
+    assert reports.period_range("last_year", today)[1].isoformat() == "2025-12-31"
+    assert reports.period_range("bogus", today) is None
+
+
+@pytest.mark.django_db
+def test_summary_ties_out(day_of_trading, owner):
+    today = timezone.localdate()
+    s = reports.summary(today, today)
+    assert s.gross_sales == Decimal("1330.00") and s.refunds == Decimal("610.00") and s.net_sales == Decimal("720.00")
+    assert s.sales_count == 3 and s.voided_count == 1
+    assert s.by_method == {"cash": Decimal("1020.00"), "mpesa": Decimal("100.00"), "credit": Decimal("210.00")}
+    # The partial refund and the void both went back in cash
+    assert s.collected_cash == Decimal("410.00") and s.collected_mpesa == Decimal("100.00")
+    assert s.deni_given == Decimal("210.00") and s.customers_owe == Decimal("210.00")
+    assert s.profit.gross_profit == Decimal("93.42")
+
+
+@pytest.mark.django_db
+def test_sold_items_margins_add_up_to_gross_profit(day_of_trading):
+    today = timezone.localdate()
+    rows = reports.sold_items(today, today)
+    assert sum(r.profit for r in rows) == reports.profit(today, today).total.gross_profit
+    assert all(r.quantity > 0 for r in rows)
+
+
+@pytest.mark.django_db
+def test_movers_average_uses_every_day_of_the_period(day_of_trading, rice):
+    today = timezone.localdate()
+    rows = {r.product.pk: r for r in reports.movers(today - timedelta(days=9), today)}
+    row = rows[rice.pk]
+    assert row.quantity == Decimal("1.000")  # 1 kg kept; the voided 2 kg doesn't count
+    assert row.per_day == Decimal("0.1")  # over 10 days, not 1 kg/day
+    assert row.speed in ("fast", "slow")
+
+
+@pytest.mark.django_db
+def test_stock_movement_rows_add_up(owner, rice, make_product):
+    from apps.inventory.services import PurchaseItem, create_purchase, record_loss
+
+    today = timezone.localdate()
+    flour = make_product("Flour", price="80", cost="60", stock="0")
+    create_purchase([PurchaseItem(rice, 1, 10, 1800), PurchaseItem(flour, 1, 5, 300)], user=owner)
+    record_loss(rice, "1", user=owner, reason="Spillage")
+    rows = {r.product.pk: r for r in reports.stock_movement(today, today)}
+    rice_row = rows[rice.pk]
+    # Opening stock entered today is counted as new stock, so the row adds up
+    assert rice_row.opening == 0 and rice_row.values["added"] == Decimal("50.000")
+    assert rice_row.values["purchased"] == Decimal("10.000") and rice_row.values["lost"] == Decimal("-1.000")
+    for row in rows.values():
+        row.product.refresh_from_db()
+        assert row.closing == row.product.stock_qty
+    # From tomorrow's point of view everything is opening
+    later = reports.stock_movement(today + timedelta(days=1), today + timedelta(days=1))
+    assert {r.product.pk: r.opening for r in later}[rice.pk] == Decimal("59.000")
+
+
+@pytest.mark.django_db
+def test_purchased_items_leaves_out_cancelled(owner, rice):
+    from apps.inventory.services import PurchaseItem, cancel_purchase, create_purchase
+
+    today = timezone.localdate()
+    create_purchase([PurchaseItem(rice, 1, 10, 1800)], user=owner)
+    wrong = create_purchase([PurchaseItem(rice, 1, 5, 900)], user=owner)
+    cancel_purchase(wrong, user=owner, reason="Twice")
+    rows = reports.purchased_items(today, today)
+    assert [(r.product, r.quantity, r.cost) for r in rows] == [(rice, Decimal("10.000"), Decimal("1800.00"))]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("url", ["/money/", "/money/profit/", "/money/products/?sort=margin", "/money/movers/?speed=slow",
+                                 "/money/stock-movement/?q=pish", "/money/purchased/", "/money/?period=last_month"])
+def test_report_pages_and_excel(owner_client, day_of_trading, url):
+    assert owner_client.get(url).status_code == 200
+    sep = "&" if "?" in url else "?"
+    response = owner_client.get(f"{url}{sep}format=xlsx")
+    assert response["Content-Type"].startswith("application/vnd.openxmlformats")

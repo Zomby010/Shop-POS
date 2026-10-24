@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+{% include "finance/_nav.html" %}
+<h1>Summary {% if s.start == s.end %}for {{ s.start|date:"D d M Y" }}{% else %}{{ s.start|date:"d M" }} to {{ s.end|date:"d M Y" }}{% endif %}</h1>
+{% include "finance/_range.html" %}
+
+<div class="stat-group"><h2>Sales</h2>
+<div class="grid">
+  <div class="stat"><div class="label">Net sales</div><div class="value">{{ s.net_sales|money }}</div><div class="sub">{{ s.gross_sales|money }} sold − {{ s.refunds|money }} refunds and voids</div></div>
+  <div class="stat"><div class="label">Sales made</div><div class="value">{{ s.sales_count }}</div><div class="sub">{% if s.voided_count %}{{ s.voided_count }} more voided{% else %}none voided{% endif %}</div></div>
+  <div class="stat"><div class="label">Average sale</div><div class="value">{{ s.average_sale|money }}</div></div>
+  <div class="stat"><div class="label">Gross profit</div><div class="value">{{ p.gross_profit|money }}</div><div class="sub">{{ p.margin_pct|floatformat:1 }}% margin · <a href="{% url 'finance:products' %}?start={{ start }}&end={{ end }}">by item</a></div></div>
+</div></div>
+
+<div class="grid" style="margin-top:1rem">
+  <div class="panel">
+    <h2 style="margin-top:0">How customers paid</h2>
+    {% with cash=s.by_method.cash|default:0 mpesa=s.by_method.mpesa|default:0 credit=s.by_method.credit|default:0 %}
+    <div class="split-bar" title="Cash, M-Pesa, deni">
+      {% if s.gross_sales %}<span class="cash" style="width:{% widthratio cash s.gross_sales 100 %}%"></span><span class="mpesa" style="width:{% widthratio mpesa s.gross_sales 100 %}%"></span><span class="credit" style="width:{% widthratio credit s.gross_sales 100 %}%"></span>{% endif %}
+    </div>
+    <table>
+      <tr><td><span class="legend"><span><i style="background:var(--brand)"></i>Cash</span></span></td><td class="num">{{ cash|money }}</td></tr>
+      <tr><td><span class="legend"><span><i style="background:#2f8fce"></i>M-Pesa</span></span></td><td class="num">{{ mpesa|money }}</td></tr>
+      <tr><td><span class="legend"><span><i style="background:var(--warn)"></i>Deni (credit)</span></span></td><td class="num">{{ credit|money }}</td></tr>
+      <tr><th>Total sold</th><th class="num">{{ s.gross_sales|money }}</th></tr>
+    </table>
+    {% endwith %}
+    <p class="muted small">Includes sales that were later voided or refunded; those come off under refunds.</p>
+  </div>
+  <div class="panel">
+    <h2 style="margin-top:0">Money collected</h2>
+    <table>
+      <tr><td>From sales, after refunds</td><td class="num">{{ s.collected_from_sales|money }}</td></tr>
+      <tr><td>Deni repaid by customers</td><td class="num">{{ s.deni_repaid_total|money }}</td></tr>
+      <tr><th>Total collected</th><th class="num">{{ s.collected_total|money }}</th></tr>
+      <tr><td class="muted">of which cash</td><td class="num muted">{{ s.collected_cash|money }}</td></tr>
+      <tr><td class="muted">of which M-Pesa</td><td class="num muted">{{ s.collected_mpesa|money }}</td></tr>
+    </table>
+    <p class="muted small">This is what should be in the till and on the M-Pesa statement, before expenses and supplier payments.</p>
+  </div>
+  <div class="panel">
+    <h2 style="margin-top:0">Deni</h2>
+    <table>
+      <tr><td>Given on deni this period</td><td class="num">{{ s.deni_given|money }}</td></tr>
+      <tr><td>Repaid this period</td><td class="num">{{ s.deni_repaid_total|money }}</td></tr>
+      <tr><th>Customers owe now (all time)</th><th class="num">{{ s.customers_owe|money }}</th></tr>
+    </table>
+    <p class="small"><a href="{% url 'partners:customer_list' %}">See who owes</a></p>
+  </div>
+</div>
+
+<div class="stat-group"><h2>Profit and loss</h2>
+<div class="grid">
+  <div class="stat"><div class="label">Cost of goods sold</div><div class="value">{{ p.cost_of_sales|money }}</div></div>
+  <div class="stat"><div class="label">Expenses</div><div class="value">{{ p.expenses|money }}</div><div class="sub"><a href="{% url 'finance:expenses' %}?start={{ start }}&end={{ end }}">see expenses</a></div></div>
+  <div class="stat"><div class="label">Stock loss</div><div class="value">{{ p.stock_loss|money }}</div><div class="sub">wastage and count differences at cost</div></div>
+  <div class="stat {% if p.net_profit < 0 %}bad{% else %}good{% endif %}"><div class="label">Net profit</div><div class="value">{{ p.net_profit|money }}</div><div class="sub"><a href="{% url 'finance:profit' %}?start={{ start }}&end={{ end }}">day by day</a></div></div>
+</div></div>
+
+<div class="stat-group"><h2>Suppliers</h2>
+<div class="grid">
+  <div class="stat"><div class="label">Bought from suppliers</div><div class="value">{{ s.purchases|money }}</div><div class="sub"><a href="{% url 'finance:purchased' %}?start={{ start }}&end={{ end }}">what was bought</a></div></div>
+  <div class="stat"><div class="label">Paid to suppliers</div><div class="value">{{ s.paid_to_suppliers|money }}</div></div>
+  <div class="stat"><div class="label">Owed to suppliers now (all time)</div><div class="value">{{ s.owed_to_suppliers|money }}</div><div class="sub"><a href="{% url 'partners:supplier_list' %}">by supplier</a></div></div>
+</div></div>
+{% endblock %}

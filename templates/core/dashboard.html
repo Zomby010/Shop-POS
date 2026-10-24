@@ -5,7 +5,7 @@
 <div class="toolbar">
   <h1 style="margin:0">Today</h1>
   <span class="spacer"></span>
-  {% if is_owner %}<a class="btn big" href="{% url 'finance:reports' %}">Today's profit</a>{% endif %}
+  {% if is_owner %}<a class="btn big" href="{% url 'finance:profit' %}">Today's profit</a>{% endif %}
   {% if can_stock %}<a class="btn big" href="{% url 'inventory:purchase_new' %}">Receive stock</a>{% endif %}
   {% if can_sell %}<a class="btn primary big" href="{% url 'sales:sell' %}">Open sell screen</a>{% endif %}
 </div>

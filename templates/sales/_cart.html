@@ -38,6 +38,6 @@
       <a class="btn big" href="{% url 'sales:held' %}">Held{% if held_count %} <span class="badge warn">{{ held_count }}</span>{% endif %}</a>
       <button type="button" class="btn primary big" id="pay-btn" {% if not lines %}disabled{% endif %}><kbd>F9</kbd> Pay</button>
     </div>
-    <div class="toolbar small"><a href="{% url 'sales:history' %}">Today's sales</a> · <a href="{% url 'sales:cashup' %}">Cash-up</a></div>
+    <div class="toolbar small"><a href="{% url 'sales:history' %}">Sales</a> · <a href="{% url 'sales:cashup' %}">Cash-up</a></div>
   </div>
 </div>

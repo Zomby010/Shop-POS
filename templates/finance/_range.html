@@ -1,7 +1,13 @@
-<form class="toolbar" method="get">
-  <label>From <input type="date" name="start" value="{{ start }}"></label>
-  <label>To <input type="date" name="end" value="{{ end }}"></label>
-  <button class="btn">Show</button>
-  <span class="spacer"></span>
-  <a class="btn" href="?start={{ start }}&end={{ end }}&format=xlsx">Export to Excel</a>
+<form class="range-form" method="get">
+  {% for key, value in request.GET.items %}{% if key in "q sort category speed method status cashier" %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}{% endfor %}
+  <div class="toolbar periods">
+    {% for value, label in periods %}<button class="btn small {% if period == value %}primary{% endif %}" name="period" value="{{ value }}">{{ label }}</button>{% endfor %}
+  </div>
+  <div class="toolbar">
+    <label>From <input type="date" name="start" value="{{ start }}"></label>
+    <label>To <input type="date" name="end" value="{{ end }}"></label>
+    <button class="btn">Show</button>
+    <span class="spacer"></span>
+    <a class="btn" href="?{% if request.GET %}{{ request.GET.urlencode }}&{% else %}start={{ start }}&end={{ end }}&{% endif %}format=xlsx">Download Excel</a>
+  </div>
 </form>

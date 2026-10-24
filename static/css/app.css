@@ -126,3 +126,17 @@ option.quick-add-option { font-weight: 600; color: var(--brand); }
 .dp-totals .dp-band td:last-child { border-radius: 0 4px 4px 0; }
 .dp-notes { background: #f7f8fa; border-radius: 6px; padding: 12px 14px; line-height: 1.6; }
 @media (max-width: 700px) { .doc-paper { padding: 0 16px 24px; } .dp-bar { margin: 0 -16px 20px; } .dp-summary { grid-template-columns: 1fr; } .dp-summary > div + div { border-left: 0; } .dp-head { flex-direction: column; } .dp-title { text-align: left; } }
+.periods { margin-bottom: .5rem; }
+.stat-group h2 { margin: 1.25rem 0 .5rem; font-size: 1rem; }
+.stat .sub { color: var(--muted); font-size: .8rem; margin-top: .2rem; }
+.stat.good .value { color: var(--brand); }
+.stat.bad .value { color: var(--danger); }
+.split-bar { display: flex; height: .6rem; border-radius: 999px; overflow: hidden; background: var(--line); margin: .5rem 0; }
+.split-bar span { display: block; height: 100%; }
+.split-bar .cash { background: var(--brand); }
+.split-bar .mpesa { background: #2f8fce; }
+.split-bar .credit { background: var(--warn); }
+.legend { display: flex; gap: 1rem; flex-wrap: wrap; font-size: .85rem; }
+.legend i { display: inline-block; width: .7rem; height: .7rem; border-radius: 2px; margin-right: .3rem; vertical-align: -1px; }
+.small-table th, .small-table td { padding-left: .4rem; padding-right: .4rem; }
+.sales-filters .periods { margin-bottom: .6rem; }

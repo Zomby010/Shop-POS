@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Purchased items{% endblock %}
+{% block content %}
+{% include "finance/_nav.html" %}
+<h1>Purchased items</h1>
+<p class="muted">What was bought from suppliers. Cancelled purchases are left out, and conversions and opening stock are never counted as purchases.</p>
+{% include "finance/_range.html" %}
+<div class="table-wrap"><table>
+  <tr><th>Product</th><th class="num">Quantity bought</th><th class="num">Total cost</th><th class="num">Average unit cost</th><th class="num">Purchases</th><th>Suppliers</th></tr>
+  {% for r in rows %}
+  <tr><td>{{ r.product.name }}</td><td class="num">{{ r.quantity|qty }} {{ r.product.unit }}</td><td class="num">{{ r.cost|money }}</td>
+    <td class="num">{{ r.unit_cost|money }}</td><td class="num">{{ r.purchases }}</td><td>{{ r.suppliers }}</td></tr>
+  {% empty %}<tr><td colspan="6" class="muted">Nothing bought in this period. <a href="{% url 'inventory:purchase_new' %}">Receive stock</a></td></tr>
+  {% endfor %}
+  {% if rows %}<tr><th>Total</th><th></th><th class="num">{{ total|money }}</th><th colspan="3"></th></tr>{% endif %}
+</table></div>
+{% endblock %}
