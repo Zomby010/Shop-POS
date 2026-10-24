@@ -22,17 +22,17 @@
   </div>
   <div class="panel">
     <h2 style="margin-top:0">Items</h2>
+    <div data-formset="{{ formset.prefix }}">
     {{ formset.management_form }}{{ formset.non_form_errors }}
     <table id="doc-lines">
-      <tr><th>Product (optional)</th><th>Description</th><th>Qty</th><th>Unit</th><th>Unit price</th><th class="num">Amount</th><th>Remove</th></tr>
-      {% for f in formset %}
-      <tr class="dl-row">{% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
-        <td>{{ f.product }}</td><td>{{ f.description }}{{ f.description.errors }}</td><td>{{ f.quantity }}{{ f.quantity.errors }}</td>
-        <td>{{ f.unit }}</td><td>{{ f.unit_price }}{{ f.unit_price.errors }}</td><td class="num dl-amount"></td><td>{% if f.instance.pk %}{{ f.DELETE }}{% endif %}</td></tr>
-      {% endfor %}
-      <tr><th colspan="5" class="num">Subtotal</th><th class="num" id="dl-subtotal"></th><th></th></tr>
+      <thead><tr><th>Product (optional)</th><th>Description</th><th>Qty</th><th>Unit</th><th>Unit price</th><th class="num">Amount</th><th>Remove</th></tr></thead>
+      <tbody data-formset-body>{% for f in formset %}{% include "documents/_line_row.html" %}{% endfor %}</tbody>
+      <tfoot><tr><th colspan="5" class="num">Subtotal</th><th class="num" id="dl-subtotal"></th><th></th></tr></tfoot>
     </table>
-    <p class="muted small">Need more rows? Save and edit again; four empty rows are added each time.</p>
+    <template data-formset-template>{% include "documents/_line_row.html" with f=formset.empty_form %}</template>
+    <div class="toolbar" style="margin-top:.6rem"><button type="button" class="btn" data-formset-add>+ Add line</button>
+      <span class="muted small">Pick a product (or "+ New product" at the bottom of the list), or leave it blank and type a description.</span></div>
+    </div>
   </div>
   <div class="panel"><p>{{ form.notes.label_tag }}{{ form.notes }}</p></div>
   <div class="toolbar"><button class="btn primary big">Save</button><a class="btn" href="{% if document %}{% url 'documents:detail' document.pk %}{% else %}{% url 'documents:list' %}{% endif %}">Cancel</a></div>
@@ -78,7 +78,7 @@
     if (e.detail.kind === "product") products[e.detail.id] = e.detail.data;
   });
   form.addEventListener("change", (e) => { showParty(); update(e); });
-  form.addEventListener("input", (e) => update(e.target.name.endsWith("unit_price") ? null : e));
+  form.addEventListener("input", (e) => update((e.target.name || "").endsWith("unit_price") || !e.target.name ? null : e));
   showParty(); update();
 })();
 </script>{% endblock %}

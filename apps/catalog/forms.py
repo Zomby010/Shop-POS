@@ -105,14 +105,14 @@ class TierFormSet(BaseInlineFormSet):
 
 
 PriceTierFormSet = inlineformset_factory(
-    Product, PriceTier, form=PriceTierForm, formset=TierFormSet, extra=2, can_delete=True
+    Product, PriceTier, form=PriceTierForm, formset=TierFormSet, extra=1, can_delete=True
 )
-QuickPresetFormSet = inlineformset_factory(Product, QuickPreset, form=QuickPresetForm, extra=3, can_delete=True)
+QuickPresetFormSet = inlineformset_factory(Product, QuickPreset, form=QuickPresetForm, extra=1, can_delete=True)
 
 QuickSaleCategoryFormSet = forms.modelformset_factory(
-    QuickSaleCategory, fields=["name", "order", "active"], extra=2, can_delete=True
+    QuickSaleCategory, fields=["name", "order", "active"], extra=1, can_delete=True
 )
-CategoryFormSet = forms.modelformset_factory(Category, fields=["name", "order"], extra=3, can_delete=True)
+CategoryFormSet = forms.modelformset_factory(Category, fields=["name", "order"], extra=1, can_delete=True)
 
 
 class ImportForm(forms.Form):

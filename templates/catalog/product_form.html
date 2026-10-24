@@ -17,28 +17,29 @@
   <div class="panel">
     <h2 style="margin-top:0">Bulk price tiers</h2>
     <p class="muted small">A lower unit price once one line reaches a quantity. Example: sugar 180 per kg, but 170 per kg from 10 kg.</p>
+    <div data-formset="{{ tiers.prefix }}">
     {{ tiers.management_form }}{{ tiers.non_form_errors }}
     <table>
-      <tr><th>From quantity</th><th>Unit price (KSh)</th><th>Remove</th></tr>
-      {% for t in tiers %}
-      <tr>{% for hidden in t.hidden_fields %}{{ hidden }}{% endfor %}
-        <td>{{ t.min_qty }}{{ t.min_qty.errors }}</td><td>{{ t.unit_price }}{{ t.unit_price.errors }}</td><td>{% if t.instance.pk %}{{ t.DELETE }}{% endif %}</td></tr>
-      {% endfor %}
+      <thead><tr><th>From quantity</th><th>Unit price (KSh)</th><th>Remove</th></tr></thead>
+      <tbody data-formset-body>{% for t in tiers %}{% include "catalog/_tier_row.html" %}{% endfor %}</tbody>
     </table>
+    <template data-formset-template>{% include "catalog/_tier_row.html" with t=tiers.empty_form %}</template>
+    {% if is_owner %}<button type="button" class="btn" data-formset-add style="margin-top:.5rem">+ Add tier</button>{% endif %}
+    </div>
   </div>
 
   <div class="panel">
     <h2 style="margin-top:0">Quick-sale buttons</h2>
     <p class="muted small">Shown on the sell screen when this product has a quick-sale category. Write a quantity (1/4 kg, 500 g, 1/2 L) or an amount (KSh 50). A Custom button is always added.</p>
+    <div data-formset="{{ presets.prefix }}">
     {{ presets.management_form }}{{ presets.non_form_errors }}
     <table>
-      <tr><th>Button</th><th>Label (optional)</th><th>Order</th><th>Hide</th><th>Remove</th></tr>
-      {% for p in presets %}
-      <tr>{% for hidden in p.hidden_fields %}{{ hidden }}{% endfor %}
-        <td>{{ p.text }}{{ p.text.errors }}</td><td>{{ p.label }}</td><td>{{ p.order }}</td><td>{{ p.hidden }}</td><td>{% if p.instance.pk %}{{ p.DELETE }}{% endif %}</td></tr>
-      {% endfor %}
+      <thead><tr><th>Button</th><th>Label (optional)</th><th>Order</th><th>Hide</th><th>Remove</th></tr></thead>
+      <tbody data-formset-body>{% for p in presets %}{% include "catalog/_preset_row.html" %}{% endfor %}</tbody>
     </table>
-    <p class="muted small">Need more rows? Save, and three new empty rows appear.</p>
+    <template data-formset-template>{% include "catalog/_preset_row.html" with p=presets.empty_form %}</template>
+    <button type="button" class="btn" data-formset-add style="margin-top:.5rem">+ Add button</button>
+    </div>
   </div>
 
   <div class="toolbar">

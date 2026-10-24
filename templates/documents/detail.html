@@ -16,9 +16,8 @@
 </div>
 <div class="grid">
   <div class="panel">
-    <p class="muted small">{% if document.kind == "quotation" %}Quotation for{% else %}Bill to{% endif %} ({{ document.get_party_type_display|lower }})</p>
-    <p><strong>{{ document.party_display }}</strong>{% if document.party_details %}<br>{{ document.party_details }}{% endif %}</p>
-    <p>Date {{ document.date }}{% if document.valid_until %} · valid until {{ document.valid_until }}{% endif %}{% if document.due_date %} · due {{ document.due_date }}{% endif %}</p>
+    <p class="muted small">For a {{ document.get_party_type_display|lower }} · created {{ document.created_at|date:"d M Y" }}{% if document.created_by %} by {{ document.created_by }}{% endif %}</p>
+    <p class="muted small">The preview below matches the PDF. Use Open PDF to print, save or send it.</p>
     {% if document.converted_from %}<p>From quotation <a href="{% url 'documents:detail' document.converted_from.pk %}">{{ document.converted_from.code }}</a></p>{% endif %}
     {% if document.status == "converted" %}<p>Converted to <a href="{% url 'documents:detail' document.converted_to.pk %}">{{ document.converted_to.code }}</a></p>{% endif %}
   </div>
@@ -33,12 +32,5 @@
     {% endif %}
   </div>
 </div>
-<table>
-  <tr><th>Description</th><th class="num">Qty</th><th>Unit</th><th class="num">Unit price</th><th class="num">Amount</th></tr>
-  {% for l in lines %}<tr><td>{{ l.description }}</td><td class="num">{{ l.quantity|qty }}</td><td>{{ l.unit }}</td><td class="num">{{ l.unit_price|money }}</td><td class="num">{{ l.line_total|money }}</td></tr>{% endfor %}
-  <tr><th colspan="4" class="num">Subtotal</th><th class="num">{{ document.subtotal|money }}</th></tr>
-  {% if document.discount %}<tr><th colspan="4" class="num">Discount</th><th class="num">−{{ document.discount|money }}</th></tr>{% endif %}
-  <tr><th colspan="4" class="num">Total (KSh)</th><th class="num">{{ document.total|money }}</th></tr>
-</table>
-{% if document.notes %}<div class="panel" style="margin-top:1rem">{{ document.notes|linebreaksbr }}</div>{% endif %}
+{% include "documents/_paper.html" %}
 {% endblock %}

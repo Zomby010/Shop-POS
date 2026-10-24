@@ -95,7 +95,7 @@ class DocumentLineForm(forms.ModelForm):
 
 
 DocumentLineFormSet = forms.inlineformset_factory(
-    Document, DocumentLine, form=DocumentLineForm, extra=4, can_delete=True, min_num=1, validate_min=True
+    Document, DocumentLine, form=DocumentLineForm, extra=0, can_delete=True, min_num=1, validate_min=True
 )
 
 

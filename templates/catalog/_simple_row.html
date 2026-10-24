@@ -1,0 +1,2 @@
+<tr data-formset-row>{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+  {% for f in form.visible_fields %}<td>{% if f.name == "DELETE" and not form.instance.pk %}<button type="button" class="btn small" data-formset-remove title="Remove">✕</button>{% else %}{{ f }}{{ f.errors }}{% endif %}</td>{% endfor %}</tr>

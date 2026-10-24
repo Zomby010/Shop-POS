@@ -5,14 +5,14 @@
 <p class="muted">{{ help }}</p>
 <form method="post" class="panel">
   {% csrf_token %}
+  <div data-formset="{{ formset.prefix }}">
   {{ formset.management_form }}{{ formset.non_form_errors }}
   <table>
-    <tr>{% for f in formset.empty_form.visible_fields %}<th>{{ f.label }}</th>{% endfor %}</tr>
-    {% for form in formset %}
-    <tr>{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-      {% for f in form.visible_fields %}<td>{{ f }}{{ f.errors }}</td>{% endfor %}</tr>
-    {% endfor %}
+    <thead><tr>{% for f in formset.empty_form.visible_fields %}<th>{{ f.label }}</th>{% endfor %}</tr></thead>
+    <tbody data-formset-body>{% for form in formset %}{% include "catalog/_simple_row.html" %}{% endfor %}</tbody>
   </table>
-  <div class="toolbar" style="margin-top:1rem"><button class="btn primary" type="submit">Save</button></div>
+  <template data-formset-template>{% include "catalog/_simple_row.html" with form=formset.empty_form %}</template>
+  <div class="toolbar" style="margin-top:1rem"><button type="button" class="btn" data-formset-add>+ Add another</button><button class="btn primary" type="submit">Save</button></div>
+  </div>
 </form>
 {% endblock %}

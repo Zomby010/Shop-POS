@@ -32,7 +32,7 @@ class PurchaseLineForm(forms.Form):
         return bool(set(self.changed_data) - {"packs", "pack_size"})
 
 
-PurchaseLineFormSet = forms.formset_factory(PurchaseLineForm, extra=5, min_num=1, validate_min=True)
+PurchaseLineFormSet = forms.formset_factory(PurchaseLineForm, extra=0, min_num=1, validate_min=True)
 
 
 class LossForm(forms.Form):

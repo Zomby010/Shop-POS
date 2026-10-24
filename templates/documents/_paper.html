@@ -1,0 +1,46 @@
+{% load shop_tags %}
+<article class="doc-paper">
+  <div class="dp-bar"></div>
+  <header class="dp-head">
+    <div>
+      {% if shop.logo %}<img class="dp-logo" src="{{ shop.logo.url }}" alt="">{% endif %}
+      <div class="dp-business">{{ shop.business_name }}</div>
+      <div class="dp-muted">{% if shop.address %}{{ shop.address }}<br>{% endif %}{% if shop.phone %}Tel {{ shop.phone }}<br>{% endif %}{% if shop.kra_pin %}KRA PIN {{ shop.kra_pin }}{% endif %}</div>
+    </div>
+    <div class="dp-title"><div>{{ document.get_kind_display|upper }}</div><span>{{ document.code }}</span></div>
+  </header>
+  <section class="dp-summary">
+    <div>
+      <div class="dp-label">{% if document.kind == "quotation" %}Quotation for{% else %}Bill to{% endif %}</div>
+      <div class="dp-party">{{ document.party_display|default:"-" }}</div>
+      <div class="dp-muted">{% with p=document.party %}{% if p %}{% if p.contact_person %}{{ p.contact_person }}<br>{% endif %}{% if p.phone %}{{ p.phone }}<br>{% endif %}{% if p.email %}{{ p.email }}<br>{% endif %}{% if p.address %}{{ p.address }}{% endif %}{% else %}{{ document.party_details }}{% endif %}{% endwith %}</div>
+    </div>
+    <div>
+      <div class="dp-label">Details</div>
+      <div><span class="dp-muted">Date</span> {{ document.date|date:"d M Y" }}</div>
+      {% if document.kind == "quotation" and document.valid_until %}<div><span class="dp-muted">Valid until</span> {{ document.valid_until|date:"d M Y" }}</div>{% endif %}
+      {% if document.kind == "invoice" and document.due_date %}<div><span class="dp-muted">Due date</span> {{ document.due_date|date:"d M Y" }}</div>{% endif %}
+      {% if document.is_bulk %}<div><span class="dp-muted">Pricing</span> Bulk order</div>{% endif %}
+    </div>
+    <div class="dp-amount">
+      <div class="dp-label">{% if document.kind == "quotation" %}Quotation total{% else %}Amount due{% endif %}</div>
+      <div class="dp-big">KSh {% if document.kind == "quotation" %}{{ document.total|money }}{% else %}{{ document.balance_due|money }}{% endif %}</div>
+    </div>
+  </section>
+  <table class="dp-items">
+    <thead><tr><th>#</th><th>Description</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Amount</th></tr></thead>
+    <tbody>{% for l in lines %}<tr><td class="dp-muted">{{ forloop.counter }}</td><td>{{ l.description }}</td><td class="num">{{ l.quantity|qty }} {{ l.unit }}</td><td class="num">{{ l.unit_price|money }}</td><td class="num">{{ l.line_total|money }}</td></tr>{% endfor %}</tbody>
+  </table>
+  <table class="dp-totals">
+    <tr><td>Subtotal</td><td class="num">{{ document.subtotal|money }}</td></tr>
+    {% if document.discount %}<tr><td>Discount</td><td class="num">−{{ document.discount|money }}</td></tr>{% endif %}
+    {% if document.kind == "invoice" and document.amount_paid %}
+    <tr><td>Total</td><td class="num">{{ document.total|money }}</td></tr>
+    <tr><td>Paid</td><td class="num">−{{ document.amount_paid|money }}</td></tr>
+    <tr class="dp-band"><td>Balance due (KSh)</td><td class="num">{{ document.balance_due|money }}</td></tr>
+    {% else %}
+    <tr class="dp-band"><td>Total (KSh)</td><td class="num">{{ document.total|money }}</td></tr>
+    {% endif %}
+  </table>
+  {% if document.notes %}<section class="dp-notes"><div class="dp-label">Payment details and notes</div>{{ document.notes|linebreaksbr }}</section>{% endif %}
+</article>
