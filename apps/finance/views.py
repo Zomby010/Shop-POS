@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.db.models import Sum
 from django.http import FileResponse, Http404, HttpResponse
@@ -215,6 +216,9 @@ def expense_delete(request, pk):
 @owner_required
 def backup_view(request):
     shop = ShopSettings.load()
+    if settings.ONLINE:
+        # Folder backups need the laptop; online, the database host keeps the backups.
+        return render(request, "finance/backup_online.html", {"tab": "backup"})
     if request.method == "POST":
         try:
             path = backup.create_backup()

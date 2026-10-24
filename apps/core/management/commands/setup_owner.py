@@ -3,6 +3,7 @@
 import getpass
 import os
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
@@ -35,4 +36,5 @@ class Command(BaseCommand):
         user.groups.add(Group.objects.get(name=OWNER))
         user.profile.set_pin(pin)
         user.profile.save()
-        self.stdout.write(self.style.SUCCESS(f"Owner '{username}' created. Log in at http://localhost:{os.environ.get('SHOPPOS_PORT', '8000')}/"))
+        where = "your online address" if settings.DATABASE_URL else f"http://localhost:{os.environ.get('SHOPPOS_PORT', '8000')}/"
+        self.stdout.write(self.style.SUCCESS(f"Owner '{username}' created. Log in at {where}"))

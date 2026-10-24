@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Backup{% endblock %}
+{% block content %}
+{% include "finance/_nav.html" %}
+<h1>Backups</h1>
+<div class="panel">
+  <p>This copy of the POS runs online, so its data lives in the online database, not in a file on a laptop.</p>
+  <p>The database host (Neon) keeps restore points. To take your own copy, run <code>python manage.py dumpdata -o shop.json</code> on a computer with <code>DATABASE_URL</code> set to this database.</p>
+</div>
+{% endblock %}
