@@ -69,3 +69,9 @@ form.stacked input[type=checkbox] { align-self: flex-start; }
 td > input:not([type=checkbox]):not([type=radio]), td > select { width: 100%; min-width: 4.5rem; }
 .cart-table td > input.qty-input { width: 5.5rem; min-width: 0; }
 .table-wrap { overflow-x: auto; }
+.quick-add-dialog { border: 0; border-radius: 10px; padding: 1.25rem; width: min(460px, 95vw); box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.quick-add-dialog::backdrop { background: rgba(16, 24, 40, .45); }
+.qa-fields > div { display: flex; flex-direction: column; gap: .25rem; margin-bottom: .7rem; }
+.qa-fields label { font-weight: 600; font-size: .9rem; }
+.qa-fields .helptext { color: var(--muted); font-size: .8rem; }
+option.quick-add-option { font-weight: 600; color: var(--brand); }

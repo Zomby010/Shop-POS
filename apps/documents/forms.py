@@ -20,6 +20,8 @@ class DocumentForm(forms.ModelForm):
             "valid_until": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
             "due_date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
             "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Payment details, delivery terms..."}),
+            "customer": forms.Select(attrs={"data-quick-add": "customer"}),
+            "supplier": forms.Select(attrs={"data-quick-add": "supplier"}),
         }
         labels = {"is_bulk": "Bulk order (use bulk tier prices)", "party_name": "One-off name",
                   "party_details": "One-off contact details"}
@@ -50,7 +52,8 @@ class DocumentForm(forms.ModelForm):
 
 
 class DocumentLineForm(forms.ModelForm):
-    product = forms.ModelChoiceField(Product.objects.active().order_by("name"), required=False)
+    product = forms.ModelChoiceField(Product.objects.active().order_by("name"), required=False,
+                                     widget=forms.Select(attrs={"data-quick-add": "product"}))
     description = forms.CharField(max_length=200, required=False)
     unit_price = forms.DecimalField(max_digits=12, decimal_places=2, required=False,
                                     help_text="Blank uses the product's price")

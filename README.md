@@ -20,6 +20,8 @@ Built with Python and Django on SQLite. The full specification is in [docs/build
 3. Double-click **`start_pos.bat`**. The first time, it needs the internet for a few minutes to install its libraries, then asks you to create the owner's username, password and PIN.
 4. The browser opens at http://localhost:8000. Keep the black window open while the shop is open; closing it stops the POS. Put a shortcut to `start_pos.bat` on the desktop.
 
+   If another program already uses port 8000, create a text file called `port.txt` next to `start_pos.bat` containing just a free port number, such as `8001`. The POS then opens at http://localhost:8001.
+
 After that the POS works fully offline.
 
 **First things to do as the owner**
@@ -69,7 +71,7 @@ Change these passwords in Settings → Users before real use. For a clean shop w
 
 Shop data (database, logo, secret key) lives in the `data/` folder, which is not part of the code. Set `SHOPPOS_DATA_DIR` to keep it elsewhere.
 
-Run the tests with `pytest`. `python serve.py` runs the same production server that `start_pos.bat` uses (waitress, on port 8000).
+Run the tests with `pytest`. `python serve.py` runs the same production server that `start_pos.bat` uses (waitress, on port 8000, or the port in the `SHOPPOS_PORT` environment variable).
 
 ## How things work
 
@@ -80,6 +82,10 @@ Every product is sold by **Piece**, **Weight** (priced per kg) or **Volume** (pr
 - **Bulk price tiers:** a product can get a lower unit price from a quantity upwards, for example sugar 180/kg but 170/kg from 10 kg.
 - **Quick-sale buttons:** put a product in a quick-sale category (Rice, Beans, Cooking oil) and give it buttons such as `1/4 kg`, `500 g`, `1/2 L` or `KSh 50`. These appear on the sell screen. Categories are managed in Settings → Quick-sale categories.
 - **Stock never changes directly.** Every change is a stock movement (opening, purchase, sale, refund, recount, stock take, loss) that records the cost at that moment, so profit stays right when cost prices change. Purchases update the weighted average cost.
+
+### Adding as you go
+
+Dropdowns for a category, quick-sale category, supplier, customer, product or expense category end with **+ New…**. Pick it to add one in a small pop-up without leaving the form; it is then selected for you. Owners can add all of these; stock clerks can add suppliers and cashiers can add customers. Loss reasons can be picked from the list or typed.
 
 ### Excel import
 
@@ -107,6 +113,7 @@ The sell screen (Sell in the top bar) is built for speed and works with the keyb
 | F10 | Hold the sale (park it under a name and serve the next customer) |
 | Esc | Back to the scan box |
 
+- **All items list:** the first tab on the right lists every product, with a search box and a category filter. Tap a product to add one piece; loose goods and the **Qty** button ask for a quantity or amount. Useful before a scanner is connected and for items without barcodes.
 - **Loose goods:** tap a preset button (1/4 kg, KSh 50) or Custom to type any quantity or amount. Buying by amount works out the quantity: KSh 50 of oil at 300/L is 0.167 L.
 - **Bulk prices** apply automatically when a line reaches a tier and show as "bulk" on the cart and receipt.
 - **Payment:** all cash, all M-Pesa, a split by amount, or deni (credit) for a customer. Cash shows the change. Split amounts must cover the total.

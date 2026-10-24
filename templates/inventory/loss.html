@@ -7,6 +7,7 @@
 <form method="post" class="panel stacked">
   {% csrf_token %}
   <div class="form-grid">{% for f in form %}<p>{{ f.label_tag }}{{ f }}{{ f.errors }}</p>{% endfor %}</div>
+  <datalist id="loss-reasons">{% for r in reasons %}<option value="{{ r }}">{% endfor %}</datalist>
   <button class="btn primary">Record loss</button>
 </form>
 <h2>Recent losses</h2>

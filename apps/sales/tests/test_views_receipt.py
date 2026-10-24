@@ -184,3 +184,26 @@ def test_print_failure_keeps_sale(cashier_client, cashier, soap):
     assert Sale.objects.filter(status="completed").count() == 1
     page = cashier_client.get(response["HX-Redirect"])
     assert b"did not print" in page.content
+
+
+@pytest.mark.django_db
+def test_item_list_on_sell_screen(cashier_client, soap, rice, make_product):
+    make_product(name="Bread", barcode="6164001234567")
+    html = cashier_client.get("/sell/products/").content.decode()
+    assert "Bar soap" in html and "Bread" in html
+    assert 'class="item-main custom"' in html  # loose rice opens the quantity/amount pop-up
+    html = cashier_client.get("/sell/products/?q=6164001").content.decode()
+    assert "Bread" in html and "Bar soap" not in html
+
+
+@pytest.mark.django_db
+def test_item_list_filters_by_category(cashier_client, make_product):
+    from apps.catalog.models import Category
+
+    drinks = Category.objects.create(name="Drinks")
+    make_product(name="Soda", category=drinks)
+    make_product(name="Soap")
+    html = cashier_client.get(f"/sell/products/?category={drinks.pk}").content.decode()
+    assert "Soda" in html and "Soap" not in html
+    html = cashier_client.get("/sell/products/?category=none").content.decode()
+    assert "Soap" in html and "Soda" not in html

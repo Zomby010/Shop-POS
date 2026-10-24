@@ -91,10 +91,10 @@ def expenses(request):
         expense.save()
         messages.success(request, f"Expense of KSh {expense.amount:,.2f} saved.")
         return redirect(f"{request.path}?start={start}&end={end}")
-    items = Expense.objects.filter(date__gte=start, date__lte=end).select_related("user")
+    items = Expense.objects.filter(date__gte=start, date__lte=end).select_related("user", "category")
     if request.GET.get("format") == "xlsx":
         header = ["Date", "Category", "Amount", "Paid by", "Note"]
-        data = [[e.date, e.get_category_display(), e.amount, e.get_method_display(), e.note] for e in items]
+        data = [[e.date, e.category.name, e.amount, e.get_method_display(), e.note] for e in items]
         return _xlsx("expenses", start, end, "Expenses", header, data)
     return render(request, "finance/expenses.html", {
         "form": form, "items": items, "total": items.aggregate(t=Sum("amount"))["t"] or 0, "tab": "expenses",
