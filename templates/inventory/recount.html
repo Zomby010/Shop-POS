@@ -4,18 +4,60 @@
 {% block content %}
 {% include "inventory/_nav.html" with tab="recount" %}
 <h1>Quick recount</h1>
-<p class="muted">Count one or a few products and set their stock to what you counted. For a full count of the shop, use a stock take.</p>
+<p class="muted">Count one or a few products and set their stock to what you counted. Every difference needs a reason, so shortages and extra stock are never mixed up. For a full count of the shop, use a stock take.</p>
+{% if preview %}
+<form method="post" class="panel">
+  {% csrf_token %}
+  <h2 style="margin-top:0">Check before saving</h2>
+  <p class="muted">{{ kind_label }}{% if session_form.cleaned_data.note %} · {{ session_form.cleaned_data.note }}{% endif %}</p>
+  <input type="hidden" name="kind" value="{{ session_form.cleaned_data.kind }}">
+  <input type="hidden" name="note" value="{{ session_form.cleaned_data.note }}">
+  <div class="table-wrap"><table>
+    <tr><th>Product</th><th class="num">System says</th><th class="num">Counted</th><th class="num">Difference</th><th class="num">Value</th><th>Reason</th></tr>
+    {% for line in preview %}
+    <tr><td>{{ line.product.name }}
+        <input type="hidden" name="count_{{ line.product.pk }}" value="{{ line.counted }}">
+        <input type="hidden" name="reason_{{ line.product.pk }}" value="{{ line.reason }}"></td>
+      <td class="num">{{ line.product.stock_qty|qty }} {{ line.product.unit }}</td>
+      <td class="num">{{ line.counted|qty }} {{ line.product.unit }}</td>
+      <td class="num">{% if line.difference > 0 %}<span class="badge ok">+{{ line.difference|qty }} extra</span>{% elif line.difference < 0 %}<span class="badge danger">{{ line.difference|qty }} short</span>{% else %}<span class="badge muted">matches</span>{% endif %}</td>
+      <td class="num">{{ line.value|money }}</td>
+      <td>{{ line.reason|default:"" }}</td></tr>
+    {% endfor %}
+  </table></div>
+  <div class="toolbar" style="margin-top:1rem">
+    <button class="btn" name="edit" value="1">Change counts</button>
+    <button class="btn primary" name="confirm" value="1">Confirm and save</button>
+  </div>
+</form>
+{% else %}
 <form class="toolbar" method="get"><input type="search" name="q" value="{{ q }}" placeholder="Search name or scan barcode" autofocus><button class="btn">Find</button></form>
 {% if products %}
 <form method="post" class="panel">
   {% csrf_token %}
-  <table>
-    <tr><th>Product</th><th class="num">System says</th><th>Counted</th></tr>
+  <div class="table-wrap"><table>
+    <tr><th>Product</th><th class="num">System says</th><th>Counted</th><th>Reason for any difference</th></tr>
     {% for p in products %}
-    <tr><td>{{ p.name }}</td><td class="num">{{ p.stock_qty|qty }} {{ p.unit }}</td><td><input name="count_{{ p.pk }}" inputmode="decimal" size="8"> {{ p.unit }}</td></tr>
+    <tr><td>{{ p.name }}</td><td class="num">{{ p.stock_qty|qty }} {{ p.unit }}</td>
+      <td><input name="count_{{ p.pk }}" value="{{ p.posted_count|default:'' }}" inputmode="decimal" size="8"> {{ p.unit }}</td>
+      <td><select name="reason_{{ p.pk }}">
+        <option value="">No difference</option>
+        <optgroup label="Shortage (less than system)">{% for r in shortage_reasons %}<option{% if p.posted_reason == r %} selected{% endif %}>{{ r }}</option>{% endfor %}</optgroup>
+        <optgroup label="Extra stock (more than system)">{% for r in surplus_reasons %}<option{% if p.posted_reason == r %} selected{% endif %}>{{ r }}</option>{% endfor %}</optgroup>
+      </select></td></tr>
     {% endfor %}
-  </table>
-  <div class="toolbar" style="margin-top:1rem"><input name="reason" placeholder="Reason (optional)"><button class="btn primary">Save counts</button></div>
+  </table></div>
+  <div class="form-grid" style="margin-top:1rem">{% for f in session_form %}<p>{{ f.label_tag }}{{ f }}{{ f.errors }}</p>{% endfor %}</div>
+  <button class="btn primary">Check counts</button>
 </form>
 {% elif q %}<p class="muted">No products match.</p>{% endif %}
+{% endif %}
+<h2>Recent recounts</h2>
+<table>
+  <tr><th>Recount</th><th>When</th><th>Type</th><th>By</th><th>Note</th></tr>
+  {% for r in recent %}
+  <tr><td><a href="{% url 'inventory:movements' %}?reference={{ r|urlencode }}">{{ r }}</a></td><td>{{ r.created_at|date:"d M Y H:i" }}</td><td>{{ r.get_kind_display }}</td><td>{{ r.user|default:"" }}</td><td>{{ r.note }}</td></tr>
+  {% empty %}<tr><td colspan="5" class="muted">No recounts yet.</td></tr>
+  {% endfor %}
+</table>
 {% endblock %}

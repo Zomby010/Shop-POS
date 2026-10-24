@@ -1,6 +1,6 @@
 {% load shop_tags %}
 {% for p in products %}
-<div class="item-row{% if p.stock_qty <= p.effective_threshold %} low{% endif %}">
+<div class="item-row {{ p.stock_status }}">
   {% if p.is_loose %}
   <button type="button" class="item-main custom" data-product="{{ p.pk }}" data-name="{{ p.name }}" data-unit="{{ p.unit }}"
           data-loose="1" data-price="{{ p.selling_price }}">
@@ -8,7 +8,7 @@
   <button type="button" class="item-main" hx-post="{% url 'sales:add' %}" hx-target="#cart"
           hx-vals='{"product": "{{ p.pk }}", "kind": "qty", "value": "1"}'>
   {% endif %}
-    <span class="item-name">{{ p.name }}</span>
+    <span class="item-name">{{ p.name }} {% include "catalog/_stock_badge.html" %}</span>
     <span class="item-meta">{{ p.selling_price|money }}/{{ p.unit }} · {{ p.stock_qty|qty }} {{ p.unit }} left{% if p.barcode %} · {{ p.barcode }}{% endif %}</span>
   </button>
   <button type="button" class="btn custom item-qty" title="Type a quantity{% if p.is_loose %} or amount{% endif %}"

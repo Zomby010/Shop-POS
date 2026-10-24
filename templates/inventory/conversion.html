@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Convert stock{% endblock %}
+{% block content %}
+{% include "inventory/_nav.html" with tab="conversion" %}
+<h1>Convert stock</h1>
+<p class="muted">Turn some of one product into another, such as a 50 kg sack of sugar into 1 kg packets or a crate into single bottles. The stock comes off the first product and goes onto the second, and the cost moves with it. Nothing is recorded as bought or sold.</p>
+<form method="post" class="panel stacked" id="conversion-form">
+  {% csrf_token %}
+  <div class="form-grid">{% for f in form %}<p>{{ f.label_tag }}{{ f }}{{ f.errors }}</p>{% endfor %}</div>
+  <p id="cv-preview" class="muted"></p>
+  <button class="btn primary">Convert</button>
+</form>
+{{ product_info|json_script:"cv-products" }}
+<h2>Recent conversions</h2>
+<div class="table-wrap"><table>
+  <tr><th>Conversion</th><th>When</th><th>Taken from</th><th>Made</th><th class="num">Cost moved</th><th class="num">New unit cost</th><th>By</th><th>Note</th></tr>
+  {% for c in recent %}
+  <tr><td>{{ c }}</td><td>{{ c.created_at|date:"d M Y H:i" }}</td>
+    <td>{{ c.from_qty|qty }} {{ c.from_product.unit }} {{ c.from_product.name }}</td>
+    <td>{{ c.to_qty|qty }} {{ c.to_product.unit }} {{ c.to_product.name }}</td>
+    <td class="num">{{ c.value|money }}</td><td class="num">{{ c.unit_cost_out|money }}</td>
+    <td>{{ c.user|default:"" }}</td><td>{{ c.note }}</td></tr>
+  {% empty %}<tr><td colspan="8" class="muted">No conversions yet.</td></tr>
+  {% endfor %}
+</table></div>
+<script>
+(function () {
+  const info = JSON.parse(document.getElementById("cv-products").textContent);
+  const form = document.getElementById("conversion-form");
+  const out = document.getElementById("cv-preview");
+  const val = (n) => form.elements[n].value;
+  const fmt = (n) => n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  function update() {
+    const from = info[val("from_product")], to = info[val("to_product")];
+    const fq = parseFloat(val("from_qty")), tq = parseFloat(val("to_qty"));
+    if (!from) { out.textContent = ""; return; }
+    let text = `In stock: ${from.stock} ${from.unit} at KSh ${fmt(from.cost)} each.`;
+    if (fq > 0) {
+      const value = fq * from.cost;
+      text += ` Cost moved across: KSh ${fmt(value)}.`;
+      if (fq > from.stock) text += " That is more than is in stock.";
+      if (tq > 0) text += ` Each ${to ? to.unit : "unit"} made will cost KSh ${fmt(value / tq)}.`;
+    }
+    out.textContent = text;
+  }
+  form.addEventListener("input", update);
+  form.addEventListener("change", update);
+  update();
+})();
+</script>
+{% endblock %}

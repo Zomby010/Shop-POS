@@ -6,6 +6,7 @@ from django.db.models.functions import Coalesce
 
 class Category(models.Model):
     name = models.CharField(max_length=80, unique=True)
+    description = models.CharField(max_length=200, blank=True)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -77,6 +78,10 @@ class Product(models.Model):
     low_stock_threshold = models.DecimalField(
         max_digits=12, decimal_places=3, null=True, blank=True, help_text="Leave blank to use the shop default"
     )
+    reorder_qty = models.DecimalField(
+        "Reorder quantity", max_digits=12, decimal_places=3, null=True, blank=True,
+        help_text="How much you usually order when it runs low (shown on the low-stock list)",
+    )
     active = models.BooleanField(default=True)
     quick_category = models.ForeignKey(
         QuickSaleCategory, null=True, blank=True, on_delete=models.SET_NULL, related_name="products"
@@ -116,6 +121,16 @@ class Product(models.Model):
     @property
     def is_low_stock(self):
         return self.stock_qty <= self.threshold
+
+    @property
+    def stock_status(self):
+        """out, low or ok: drives the stock badges on lists and the sell screen."""
+        if self.stock_qty <= 0:
+            return "out"
+        # Lists annotate effective_threshold (with_threshold) so this costs no extra query per row.
+        threshold = getattr(self, "effective_threshold", None)
+        low = self.stock_qty <= threshold if threshold is not None else self.is_low_stock
+        return "low" if low else "ok"
 
     def visible_presets(self):
         return [p for p in self.presets.all() if not p.hidden]
@@ -176,6 +191,9 @@ class StockMovement(models.Model):
         RECOUNT = "recount", "Recount adjustment"
         STOCKTAKE = "stocktake", "Stock take"
         LOSS = "loss", "Loss or wastage"
+        CONVERSION_OUT = "conv_out", "Converted out"
+        CONVERSION_IN = "conv_in", "Converted in"
+        PURCHASE_CANCEL = "purch_cancel", "Purchase cancelled"
 
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="movements")
     kind = models.CharField(max_length=12, choices=Kind.choices)
@@ -185,6 +203,8 @@ class StockMovement(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
     reason = models.CharField(max_length=200, blank=True)
     reference = models.CharField(max_length=60, blank=True, db_index=True)
+    stock_after = models.DecimalField(max_digits=14, decimal_places=3, null=True, blank=True,
+                                      help_text="Product stock right after this movement")
 
     class Meta:
         ordering = ["-created_at", "-id"]
@@ -195,3 +215,26 @@ class StockMovement(models.Model):
     @property
     def value(self):
         return self.quantity * self.unit_cost
+
+    @property
+    def stock_before(self):
+        return None if self.stock_after is None else self.stock_after - self.quantity
+
+
+class PriceChange(models.Model):
+    """A change to a product's cost or selling price, with what caused it."""
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="price_changes")
+    changed_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    old_cost = models.DecimalField(max_digits=12, decimal_places=2)
+    new_cost = models.DecimalField(max_digits=12, decimal_places=2)
+    old_price = models.DecimalField(max_digits=12, decimal_places=2)
+    new_price = models.DecimalField(max_digits=12, decimal_places=2)
+    reason = models.CharField(max_length=120)
+
+    class Meta:
+        ordering = ["-changed_at", "-id"]
+
+    def __str__(self):
+        return f"{self.product}: {self.reason}"

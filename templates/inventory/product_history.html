@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}History · {{ product.name }}{% endblock %}
+{% block content %}
+{% include "inventory/_nav.html" with tab="movements" %}
+<div class="toolbar"><h1 style="margin:0">{{ product.name }}</h1><span class="spacer"></span>
+  <a class="btn" href="{% url 'catalog:product_edit' product.pk %}">Edit product</a></div>
+<p>In stock now: <strong>{{ product.stock_qty|qty }} {{ product.unit }}</strong> · cost {{ product.cost_price|money }} · price {{ product.selling_price|money }}
+  {% include "catalog/_stock_badge.html" with p=product %}</p>
+<form class="toolbar" method="get">
+  <select name="kind"><option value="">All types</option>{% for value, label in kinds %}<option value="{{ value }}"{% if value == kind %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+  <label>From <input type="date" name="start" value="{{ start }}"></label>
+  <label>To <input type="date" name="end" value="{{ end }}"></label>
+  <button class="btn">Filter</button>
+  <button class="btn" name="format" value="xlsx">Download Excel</button>
+</form>
+<h2>Stock movements</h2>
+<div class="table-wrap"><table>
+  <tr><th>When</th><th>Type</th><th class="num">Before</th><th class="num">Change</th><th class="num">After</th><th class="num">Unit cost</th><th>By</th><th>Reason / ref</th></tr>
+  {% for m in movements %}
+  <tr><td>{{ m.created_at|date:"d M Y H:i" }}</td><td>{{ m.get_kind_display }}</td>
+    <td class="num">{{ m.stock_before|qty }}</td>
+    <td class="num">{% if m.quantity > 0 %}+{% endif %}{{ m.quantity|qty }}</td>
+    <td class="num"><strong>{{ m.stock_after|qty }}</strong></td>
+    <td class="num">{{ m.unit_cost|money }}</td><td>{{ m.user|default:"" }}</td><td>{{ m.reason }} {{ m.reference }}</td></tr>
+  {% empty %}<tr><td colspan="8" class="muted">No movements.</td></tr>
+  {% endfor %}
+</table></div>
+<h2>Cost and price changes</h2>
+<div class="table-wrap"><table>
+  <tr><th>When</th><th class="num">Cost</th><th class="num">Selling price</th><th>Why</th><th>By</th></tr>
+  {% for c in price_changes %}
+  <tr><td>{{ c.changed_at|date:"d M Y H:i" }}</td>
+    <td class="num">{% if c.old_cost != c.new_cost %}{{ c.old_cost|money }} → {{ c.new_cost|money }}{% else %}{{ c.new_cost|money }}{% endif %}</td>
+    <td class="num">{% if c.old_price != c.new_price %}{{ c.old_price|money }} → {{ c.new_price|money }}{% else %}{{ c.new_price|money }}{% endif %}</td>
+    <td>{{ c.reason }}</td><td>{{ c.user|default:"" }}</td></tr>
+  {% empty %}<tr><td colspan="5" class="muted">No changes recorded yet.</td></tr>
+  {% endfor %}
+</table></div>
+{% endblock %}

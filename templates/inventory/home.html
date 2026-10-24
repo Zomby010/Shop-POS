@@ -7,7 +7,7 @@
 {% if open_take %}<div class="panel">A stock take is in progress. <a href="{% url 'inventory:stocktake' open_take.pk %}">Continue counting</a>.</div>{% endif %}
 <div class="grid">
   <div class="panel">
-    <h2 style="margin-top:0">Low stock <span class="badge warn">{{ low_stock_count }}</span></h2>
+    <div class="toolbar"><h2 style="margin:0">Low stock <span class="badge warn">{{ low_stock_count }}</span></h2><span class="spacer"></span><a href="{% url 'inventory:low_stock' %}">Reorder list</a></div>
     <table>
       {% for p in low_stock %}<tr><td>{{ p.name }}</td><td class="num">{{ p.stock_qty|qty }} {{ p.unit }}</td><td class="num muted">alert at {{ p.effective_threshold|qty }}</td></tr>
       {% empty %}<tr><td class="muted">Nothing is running low.</td></tr>{% endfor %}

@@ -1,5 +1,5 @@
 <tr class="pl-row" data-formset-row>
   <td>{{ f.product }}{{ f.product.errors }}</td><td>{{ f.packs }}{{ f.packs.errors }}</td><td>{{ f.pack_size }}{{ f.pack_size.errors }}</td>
-  <td>{{ f.pack_cost }}{{ f.pack_cost.errors }}</td><td class="num pl-adds"></td><td class="num pl-total"></td>
+  <td>{{ f.pack_cost }}{{ f.pack_cost.errors }}</td><td>{{ f.new_price }}{{ f.new_price.errors }}</td><td class="num pl-adds"></td><td class="num pl-total"></td>
   <td>{% if not forloop.first or adding %}<button type="button" class="btn small" data-formset-remove title="Remove line">✕</button>{% endif %}</td>
 </tr>

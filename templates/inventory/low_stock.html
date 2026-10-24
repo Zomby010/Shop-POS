@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Low stock{% endblock %}
+{% block content %}
+{% include "inventory/_nav.html" with tab="low_stock" %}
+<div class="toolbar"><h1 style="margin:0">Low stock: what to order</h1><span class="spacer"></span>
+  <a class="btn" href="?format=xlsx">Download Excel</a>
+  <a class="btn primary" href="{% url 'inventory:purchase_new' %}">Receive stock</a></div>
+<p class="muted">Products at or below their alert level. Set a reorder quantity on a product to see how much to buy and roughly what it will cost.</p>
+<div class="table-wrap"><table>
+  <tr><th>Product</th><th>Category</th><th class="num">In stock</th><th class="num">Alert at</th><th class="num">Reorder qty</th><th class="num">Est. cost</th><th>Last supplier</th><th></th></tr>
+  {% for p in products %}
+  <tr><td>{{ p.name }} {% include "catalog/_stock_badge.html" %}</td><td>{{ p.category|default:"" }}</td>
+    <td class="num">{{ p.stock_qty|qty }} {{ p.unit }}</td><td class="num">{{ p.effective_threshold|qty }}</td>
+    <td class="num">{% if p.reorder_qty %}{{ p.reorder_qty|qty }} {{ p.unit }}{% else %}<span class="muted">not set</span>{% endif %}</td>
+    <td class="num">{% if p.reorder_qty %}{{ p.order_cost|money }}{% endif %}</td>
+    <td>{% if p.last_supplier %}<a href="{% url 'partners:supplier_detail' p.last_supplier.pk %}">{{ p.last_supplier }}</a>{% endif %}</td>
+    <td><a href="{% url 'inventory:product_history' p.pk %}">History</a> · <a href="{% url 'catalog:product_edit' p.pk %}">Edit</a></td></tr>
+  {% empty %}<tr><td colspan="8" class="muted">Nothing is running low.</td></tr>
+  {% endfor %}
+  {% if order_total %}<tr><th colspan="5" class="num">Estimated order total</th><th class="num">{{ order_total|money }}</th><th colspan="2"></th></tr>{% endif %}
+</table></div>
+{% endblock %}

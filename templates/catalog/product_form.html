@@ -51,11 +51,11 @@
 
 {% if movements %}
 <div class="panel">
-  <h2 style="margin-top:0">Recent stock movements</h2>
+  <div class="toolbar"><h2 style="margin:0">Recent stock movements</h2><span class="spacer"></span><a class="btn" href="{% url 'inventory:product_history' product.pk %}">Full history and price changes</a></div>
   <table>
-    <tr><th>When</th><th>Type</th><th class="num">Quantity</th><th class="num">Unit cost</th><th>By</th><th>Reason / ref</th></tr>
+    <tr><th>When</th><th>Type</th><th class="num">Before</th><th class="num">Change</th><th class="num">After</th><th class="num">Unit cost</th><th>By</th><th>Reason / ref</th></tr>
     {% for m in movements %}
-    <tr><td>{{ m.created_at|date:"d M Y H:i" }}</td><td>{{ m.get_kind_display }}</td><td class="num">{{ m.quantity|floatformat:"-3" }}</td><td class="num">{{ m.unit_cost }}</td><td>{{ m.user|default:"" }}</td><td>{{ m.reason }} {{ m.reference }}</td></tr>
+    <tr><td>{{ m.created_at|date:"d M Y H:i" }}</td><td>{{ m.get_kind_display }}</td><td class="num">{{ m.stock_before|floatformat:"-3" }}</td><td class="num">{% if m.quantity > 0 %}+{% endif %}{{ m.quantity|floatformat:"-3" }}</td><td class="num">{{ m.stock_after|floatformat:"-3" }}</td><td class="num">{{ m.unit_cost }}</td><td>{{ m.user|default:"" }}</td><td>{{ m.reason }} {{ m.reference }}</td></tr>
     {% endfor %}
   </table>
 </div>

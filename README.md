@@ -125,16 +125,19 @@ The sell screen (Sell in the top bar) is built for speed and works with the keyb
 
 Stock in the top bar (owners and stock clerks).
 
-- **Receive stock:** pick the supplier and add items in packs. "2 sacks × 50 kg at KSh 9,000" adds 100 kg at KSh 180/kg and updates the average cost.
-- **Recount:** search a few products and type what you counted.
+- **Receive stock:** pick the supplier and add items in packs. "2 sacks × 50 kg at KSh 9,000" adds 100 kg at KSh 180/kg and updates the average cost. Type a new selling price on a line if the shelf price is changing. Leave **Paid now** blank if you paid in full; anything less is recorded as owed to the supplier.
+- **Purchases:** each one shows Paid, Partly paid or Unpaid. Open it to record a later payment (cash, M-Pesa or bank). The owner can cancel a purchase entered by mistake: its stock comes off again (refused if some was already sold).
+- **Convert:** turn some of one product into another, such as a 50 kg sack into 1 kg packets or a crate into single bottles. Stock comes off the first and goes onto the second with its cost, and nothing is recorded as bought or sold.
+- **Recount:** search a few products and type what you counted. Every difference needs a reason: shortage reasons (normal loss, damaged, theft…) for less, and surplus reasons (delivery not recorded, returned…) for more, so extra stock is never filed as a loss. Pick the type (spot, opening, closing), check the summary, then confirm. Each recount gets a number (RC0001).
 - **Stock take:** start one for the whole shop or one category. The system notes what it expects; you type counts as you go and save often. Selling can continue. When the owner approves, only the differences found are posted, so sales made during counting are kept.
 - **Loss and wastage:** record spillage, scooping loss, expiry or damage with a reason.
+- **Product history:** every movement of a product with the quantity before and after, plus each cost and selling price change and why. Filter by type and date and download it to Excel.
 - **Loose-goods loss report** (owner): for rice, beans, oil and other weighed goods, expected against counted kg/L over approved stock takes, plus recorded losses, as a share of what was sold.
-- **Low stock:** products at or below their alert level show on the dashboard, the Stock page and as a badge on Products.
+- **Low stock:** a reorder list of products at or below their alert level, with the reorder quantity set on each product, the estimated cost and the last supplier, downloadable to Excel. Out-of-stock and low badges also show on Products and the sell screen.
 
 ### Suppliers, invoices and quotations
 
-- **Suppliers** (Customers & suppliers → Suppliers): add, edit and deactivate suppliers, and see each one's purchase history.
+- **Suppliers** (Customers & suppliers → Suppliers): add, edit and deactivate suppliers, and see each one's purchase history and what the shop still owes them.
 - **Invoices and quotations** (owner): prepare them for a customer, a supplier or a one-off name. Tick **Bulk order** and product lines with a blank price take the bulk tier price for their quantity. Lines can also be free text (delivery, services).
 - Each document is numbered (INV-0001, QUO-0001) and opens as a PDF with the business name and logo from Settings, ready to print, save or send. A quotation converts into an invoice in one click, and invoices track payments (draft, sent, partly paid, paid).
 

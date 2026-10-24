@@ -1,0 +1,1 @@
+{% with s=p.payment_status %}<span class="badge {% if s == 'Paid' %}ok{% elif s == 'Cancelled' %}muted{% elif s == 'Partly paid' %}warn{% else %}danger{% endif %}">{{ s }}</span>{% endwith %}
