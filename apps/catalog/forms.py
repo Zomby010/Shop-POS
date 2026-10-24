@@ -17,7 +17,7 @@ class ProductForm(forms.ModelForm):
         model = Product
         fields = [
             "name", "barcode", "category", "sold_by", "selling_price", "cost_price",
-            "low_stock_threshold", "quick_category", "quick_order", "active",
+            "low_stock_threshold", "reorder_qty", "quick_category", "quick_order", "active",
         ]
         labels = {"quick_category": "Quick-sale category", "quick_order": "Order on quick-sale panel"}
         widgets = {
@@ -112,7 +112,10 @@ QuickPresetFormSet = inlineformset_factory(Product, QuickPreset, form=QuickPrese
 QuickSaleCategoryFormSet = forms.modelformset_factory(
     QuickSaleCategory, fields=["name", "order", "active"], extra=1, can_delete=True
 )
-CategoryFormSet = forms.modelformset_factory(Category, fields=["name", "order"], extra=1, can_delete=True)
+CategoryFormSet = forms.modelformset_factory(
+    Category, fields=["name", "description", "order"], extra=1, can_delete=True,
+    widgets={"description": forms.TextInput(attrs={"placeholder": "What goes in this category"})},
+)
 
 
 class ImportForm(forms.Form):

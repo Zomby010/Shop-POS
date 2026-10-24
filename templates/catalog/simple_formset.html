@@ -8,7 +8,7 @@
   <div data-formset="{{ formset.prefix }}">
   {{ formset.management_form }}{{ formset.non_form_errors }}
   <table>
-    <thead><tr>{% for f in formset.empty_form.visible_fields %}<th>{{ f.label }}</th>{% endfor %}</tr></thead>
+    <thead><tr>{% for f in formset.empty_form.visible_fields %}<th>{{ f.label }}</th>{% endfor %}{% if show_counts %}<th class="num">Items</th>{% endif %}</tr></thead>
     <tbody data-formset-body>{% for form in formset %}{% include "catalog/_simple_row.html" %}{% endfor %}</tbody>
   </table>
   <template data-formset-template>{% include "catalog/_simple_row.html" with form=formset.empty_form %}</template>

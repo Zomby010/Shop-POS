@@ -28,7 +28,7 @@
     <td>{{ p.unit }}</td>
     <td class="num">{{ p.selling_price|intcomma }}{% if p.is_loose %}/{{ p.unit }}{% endif %}</td>
     {% if is_owner %}<td class="num">{{ p.cost_price|intcomma }}</td>{% endif %}
-    <td class="num">{{ p.stock_qty|floatformat:"-3" }} {{ p.unit }}{% if p.stock_qty <= p.effective_threshold %} <span class="badge warn">low</span>{% endif %}</td>
+    <td class="num">{{ p.stock_qty|floatformat:"-3" }} {{ p.unit }} {% include "catalog/_stock_badge.html" %}</td>
     <td>{{ p.quick_category|default:"" }}</td>
   </tr>
   {% empty %}

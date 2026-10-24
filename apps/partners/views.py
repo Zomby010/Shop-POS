@@ -1,8 +1,10 @@
 from django.contrib import messages
-from django.db.models import Q, Sum
+from django.db.models import F, Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.core.roles import CASHIER, STOCK_CLERK, is_owner, owner_required, role_required
+
+from apps.inventory.services import supplier_balance
 
 from .forms import CustomerForm, RepaymentForm, SupplierForm
 from .models import Customer, Supplier
@@ -55,7 +57,8 @@ def customer_detail(request, pk):
 
 @role_required(STOCK_CLERK)
 def supplier_list(request):
-    qs = Supplier.objects.all()
+    owed = Sum(F("purchases__total") - F("purchases__amount_paid"), filter=Q(purchases__cancelled_at=None))
+    qs = Supplier.objects.annotate(owed=owed)
     term = (request.GET.get("q") or "").strip()
     if term:
         qs = qs.filter(Q(name__icontains=term) | Q(contact_person__icontains=term) | Q(phone__icontains=term))
@@ -81,7 +84,8 @@ def supplier_detail(request, pk):
     supplier = get_object_or_404(Supplier, pk=pk)
     purchases = supplier.purchases.select_related("user").prefetch_related("lines")[:100]
     documents = supplier.documents.all()[:50] if is_owner(request.user) else []
-    total = supplier.purchases.aggregate(t=Sum("total"))["t"] or 0
+    total = supplier.purchases.filter(cancelled_at=None).aggregate(t=Sum("total"))["t"] or 0
     return render(request, "partners/supplier_detail.html", {
         "supplier": supplier, "purchases": purchases, "documents": documents, "total": total,
+        "owed": supplier_balance(supplier),
     })

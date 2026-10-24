@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -12,7 +13,7 @@ from .forms import (
     CategoryFormSet, ImportForm, PriceTierFormSet, ProductForm, QuickPresetFormSet, QuickSaleCategoryFormSet,
 )
 from .models import Category, Product, StockMovement
-from .stock import record_movement
+from .stock import log_price_change, record_movement
 
 XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
@@ -42,6 +43,7 @@ def _unit_for(request, product):
 @role_required(STOCK_CLERK)
 def product_edit(request, pk=None):
     product = get_object_or_404(Product, pk=pk) if pk else Product()
+    old_cost, old_price = product.cost_price or 0, product.selling_price or 0
     owner = is_owner(request.user)
     if pk is None and not owner:
         messages.error(request, "Only the owner can add products.")
@@ -58,6 +60,8 @@ def product_edit(request, pk=None):
     if request.method == "POST" and form.is_valid() and tiers.is_valid() and presets.is_valid():
         with transaction.atomic():
             product = form.save()
+            log_price_change(product, old_cost=old_cost, old_price=old_price, user=request.user,
+                             reason="Product added" if pk is None else "Edited on the product page")
             if owner:
                 tiers.instance = product
                 tiers.save()
@@ -93,14 +97,15 @@ def quick_categories(request):
 
 @owner_required
 def categories(request):
-    formset = CategoryFormSet(request.POST or None, prefix="cat")
+    queryset = Category.objects.annotate(item_count=Count("products", filter=Q(products__active=True)))
+    formset = CategoryFormSet(request.POST or None, prefix="cat", queryset=queryset)
     if request.method == "POST" and formset.is_valid():
         formset.save()
         messages.success(request, "Categories saved.")
         return redirect("catalog:categories")
     return render(request, "catalog/simple_formset.html", {
         "formset": formset, "title": "Product categories",
-        "help": "Categories group products in lists and reports.",
+        "help": "Categories group products in lists and reports.", "show_counts": True,
     })
 
 

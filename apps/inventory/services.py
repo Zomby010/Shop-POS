@@ -8,10 +8,10 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from apps.catalog.models import Product, StockMovement
-from apps.catalog.stock import record_movement, set_counted_stock
+from apps.catalog.stock import log_price_change, record_movement, set_counted_stock
 from apps.core.money import ZERO, q2, q3, to_decimal
 
-from .models import Purchase, PurchaseLine, StockTake, StockTakeLine
+from .models import Conversion, Purchase, PurchaseLine, Recount, StockTake, StockTakeLine, SupplierPayment
 
 
 class StockError(ValueError):
@@ -24,11 +24,15 @@ class PurchaseItem:
     packs: Decimal
     pack_size: Decimal
     pack_cost: Decimal
+    new_price: Decimal | None = None  # a new selling price per unit, set while receiving
 
 
 @transaction.atomic
-def create_purchase(items, *, user, supplier=None, date=None, supplier_reference="", note=""):
-    """'1 sack of 50 kg at KSh 9,000' becomes +50 kg at KSh 180/kg."""
+def create_purchase(items, *, user, supplier=None, date=None, supplier_reference="", note="",
+                    amount_paid=None, payment_method=SupplierPayment.Method.CASH):
+    """'1 sack of 50 kg at KSh 9,000' becomes +50 kg at KSh 180/kg.
+
+    amount_paid is what was paid on delivery; None means paid in full. The rest is owed to the supplier."""
     if not items:
         raise StockError("Add at least one item.")
     purchase = Purchase.objects.create(supplier=supplier, date=date or timezone.localdate(),
@@ -47,26 +51,168 @@ def create_purchase(items, *, user, supplier=None, date=None, supplier_reference
                                     pack_cost=cost, quantity=quantity, unit_cost=unit_cost, line_total=line_total)
         record_movement(item.product, StockMovement.Kind.PURCHASE, quantity, unit_cost=cost / size, user=user,
                         reason=f"From {supplier}" if supplier else "Stock received", reference=str(purchase))
+        new_price = to_decimal(item.new_price)
+        if new_price is not None:
+            if new_price <= ZERO:
+                raise StockError(f"{item.product.name}: the new selling price must be more than zero.")
+            product = Product.objects.get(pk=item.product.pk)
+            old_price = product.selling_price
+            product.selling_price = q2(new_price)
+            product.save(update_fields=["selling_price", "updated_at"])
+            log_price_change(product, old_cost=product.cost_price, old_price=old_price, user=user,
+                             reason=f"New selling price on {purchase}")
         total += line_total
     purchase.total = total
     purchase.save(update_fields=["total"])
+    paid = total if amount_paid is None else q2(to_decimal(amount_paid, ZERO))
+    if paid < ZERO or paid > total:
+        raise StockError(f"Amount paid must be between 0 and the purchase total of KSh {total:,.2f}.")
+    if paid > ZERO:
+        pay_supplier(purchase, paid, user=user, method=payment_method, date=purchase.date, note="Paid on delivery")
+        purchase.amount_paid = paid
     return purchase
 
 
 @transaction.atomic
-def recount(counts, *, user, reason="Recount"):
-    """counts: {product: counted quantity}. Returns the movements made."""
-    movements = []
-    for product, counted in counts.items():
-        counted = to_decimal(counted)
+def pay_supplier(purchase, amount, *, user, method=SupplierPayment.Method.CASH, date=None, note=""):
+    purchase = Purchase.objects.select_for_update().get(pk=purchase.pk)
+    amount = q2(to_decimal(amount, ZERO))
+    if purchase.is_cancelled:
+        raise StockError("This purchase is cancelled.")
+    if amount <= ZERO:
+        raise StockError("Enter the amount paid.")
+    if amount > purchase.balance:
+        raise StockError(f"That is more than the KSh {purchase.balance:,.2f} still owed on {purchase}.")
+    payment = SupplierPayment.objects.create(purchase=purchase, amount=amount, method=method, user=user,
+                                             date=date or timezone.localdate(), note=note)
+    purchase.amount_paid = purchase.payments.aggregate(t=Sum("amount"))["t"] or ZERO
+    purchase.save(update_fields=["amount_paid"])
+    return payment
+
+
+def supplier_balance(supplier):
+    """What the shop still owes a supplier across its purchases."""
+    owed = ZERO
+    for purchase in supplier.purchases.filter(cancelled_at=None):
+        owed += purchase.balance
+    return owed
+
+
+@transaction.atomic
+def cancel_purchase(purchase, *, user, reason):
+    """Undo a purchase entered by mistake: its stock comes off again. Payments stay on record."""
+    purchase = Purchase.objects.select_for_update().get(pk=purchase.pk)
+    if purchase.is_cancelled:
+        raise StockError("This purchase is already cancelled.")
+    if not (reason or "").strip():
+        raise StockError("Give a reason for cancelling.")
+    lines = list(purchase.lines.select_related("product"))
+    short = [l.product.name for l in lines if l.product.stock_qty < l.quantity]
+    if short:
+        raise StockError(f"Can't cancel: some of this stock has already been sold or used ({', '.join(short)}). "
+                         "Record a loss or recount instead.")
+    for line in lines:
+        record_movement(line.product, StockMovement.Kind.PURCHASE_CANCEL, -line.quantity, unit_cost=line.unit_cost,
+                        user=user, reason=reason, reference=str(purchase))
+    purchase.cancelled_at = timezone.now()
+    purchase.cancelled_by = user
+    purchase.cancel_reason = reason.strip()[:200]
+    purchase.save(update_fields=["cancelled_at", "cancelled_by", "cancel_reason"])
+    return purchase
+
+
+# ---------------------------------------------------------------- conversions
+
+@transaction.atomic
+def convert(from_product, from_qty, to_product, to_qty, *, user, note=""):
+    """Move stock from one product into another, carrying its cost.
+
+    2 kg of loose sugar at 160/kg into 2 x 1 kg packets: -2 kg sugar, +2 packets at 160 each.
+    The cost moved is the input at its current cost, so the output's average cost reflects what it
+    really cost the shop. Nothing is recorded as a purchase."""
+    from_qty, to_qty = to_decimal(from_qty), to_decimal(to_qty)
+    if from_product.pk == to_product.pk:
+        raise StockError("Pick two different products.")
+    if not from_qty or from_qty <= ZERO or not to_qty or to_qty <= ZERO:
+        raise StockError("Enter how much goes in and how much comes out.")
+    for product, qty in ((from_product, from_qty), (to_product, to_qty)):
+        if not product.is_loose and qty != qty.to_integral_value():
+            raise StockError(f"{product.name} is counted in pieces, so its quantity must be whole.")
+    from_product.refresh_from_db()
+    if from_qty > from_product.stock_qty:
+        raise StockError(f"Only {from_product.stock_qty.normalize():f} {from_product.unit} of {from_product.name} "
+                         f"in stock.")
+    from_qty, to_qty = q3(from_qty), q3(to_qty)
+    value = q2(from_qty * from_product.cost_price)
+    conversion = Conversion.objects.create(from_product=from_product, from_qty=from_qty, to_product=to_product,
+                                           to_qty=to_qty, value=value, note=note, user=user)
+    ref = str(conversion)
+    record_movement(from_product, StockMovement.Kind.CONVERSION_OUT, -from_qty, unit_cost=from_product.cost_price,
+                    user=user, reason=f"Into {to_qty.normalize():f} {to_product.unit} {to_product.name}", reference=ref)
+    record_movement(to_product, StockMovement.Kind.CONVERSION_IN, to_qty, unit_cost=value / to_qty, user=user,
+                    reason=f"From {from_qty.normalize():f} {from_product.unit} {from_product.name}", reference=ref)
+    return conversion
+
+
+SHORTAGE_REASONS = ["Normal loss", "Used in the shop", "Damaged", "Expired", "Theft", "Other shortage"]
+SURPLUS_REASONS = ["Over-counted before", "Delivery not recorded", "Returned by customer", "Other surplus"]
+
+
+@dataclass
+class CountLine:
+    product: Product
+    counted: Decimal
+    reason: str = ""
+
+    @property
+    def difference(self):
+        return q3(self.counted - self.product.stock_qty)
+
+    @property
+    def value(self):
+        return q2(self.difference * self.product.cost_price)
+
+
+def check_counts(counts):
+    """counts: {product: (counted text, reason)}. Returns CountLines, or raises StockError listing every problem.
+
+    A shortage needs a shortage reason and a surplus a surplus reason, so gains are never filed as losses."""
+    lines, errors = [], []
+    for product, (text, reason) in counts.items():
+        counted = to_decimal(text)
         if counted is None or counted < ZERO:
-            raise StockError(f"{product.name}: enter the counted quantity.")
+            errors.append(f"{product.name}: enter the counted quantity.")
+            continue
         if not product.is_loose and counted != counted.to_integral_value():
-            raise StockError(f"{product.name} is counted in pieces, so the count must be whole.")
-        movement = set_counted_stock(product, counted, kind=StockMovement.Kind.RECOUNT, user=user, reason=reason)
+            errors.append(f"{product.name} is counted in pieces, so the count must be whole.")
+            continue
+        product.refresh_from_db(fields=["stock_qty", "cost_price"])
+        line = CountLine(product, q3(counted), (reason or "").strip())
+        if line.difference < ZERO and line.reason not in SHORTAGE_REASONS:
+            errors.append(f"{product.name} is {(-line.difference).normalize():f} {product.unit} short: choose why.")
+        elif line.difference > ZERO and line.reason not in SURPLUS_REASONS:
+            errors.append(f"{product.name} has {line.difference.normalize():f} {product.unit} extra: choose why.")
+        lines.append(line)
+    if errors:
+        raise StockError(" ".join(errors))
+    if not lines:
+        raise StockError("Type a count for at least one product.")
+    return lines
+
+
+@transaction.atomic
+def recount(counts, *, user, kind=Recount.Kind.SPOT, note=""):
+    """counts: {product: (counted, reason)}. Saves a Recount and returns it with the movements made."""
+    lines = check_counts(counts)
+    session = Recount.objects.create(kind=kind, note=note, user=user)
+    movements = []
+    for line in lines:
+        reason = line.reason or "Count matched"
+        movement = set_counted_stock(line.product, line.counted, kind=StockMovement.Kind.RECOUNT, user=user,
+                                     reason=reason, reference=str(session))
         if movement:
             movements.append(movement)
-    return movements
+    return session, movements
 
 
 LOSS_REASONS = ["Spillage", "Scooping loss", "Expired", "Damaged", "Pests", "Theft", "Other"]

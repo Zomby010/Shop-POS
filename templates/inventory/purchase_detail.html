@@ -3,14 +3,47 @@
 {% block title %}{{ purchase }}{% endblock %}
 {% block content %}
 {% include "inventory/_nav.html" with tab="purchases" %}
-<h1>{{ purchase }} · {{ purchase.date }}</h1>
+<h1>{{ purchase }} · {{ purchase.date }} {% include "inventory/_pay_badge.html" with p=purchase %}</h1>
 <p>{% if purchase.supplier %}From <a href="{% url 'partners:supplier_detail' purchase.supplier.pk %}">{{ purchase.supplier }}</a>{% endif %}{% if purchase.supplier_reference %} · their ref {{ purchase.supplier_reference }}{% endif %} · received by {{ purchase.user|default:"" }}</p>
 {% if purchase.note %}<p class="muted">{{ purchase.note }}</p>{% endif %}
-<table>
+{% if purchase.is_cancelled %}<div class="panel"><strong>Cancelled</strong> on {{ purchase.cancelled_at|date:"d M Y H:i" }} by {{ purchase.cancelled_by|default:"" }}: {{ purchase.cancel_reason }}. The stock it added has been taken off again.</div>{% endif %}
+<div class="table-wrap"><table>
   <tr><th>Product</th><th class="num">Packs</th><th class="num">Per pack</th><th class="num">Cost per pack</th><th class="num">Quantity added</th><th class="num">Unit cost</th><th class="num">Line total</th></tr>
   {% for l in lines %}
-  <tr><td>{{ l.product.name }}</td><td class="num">{{ l.packs|qty }}</td><td class="num">{{ l.pack_size|qty }} {{ l.product.unit }}</td><td class="num">{{ l.pack_cost|money }}</td><td class="num">{{ l.quantity|qty }} {{ l.product.unit }}</td><td class="num">{{ l.unit_cost|money }}</td><td class="num">{{ l.line_total|money }}</td></tr>
+  <tr><td><a href="{% url 'inventory:product_history' l.product.pk %}">{{ l.product.name }}</a></td><td class="num">{{ l.packs|qty }}</td><td class="num">{{ l.pack_size|qty }} {{ l.product.unit }}</td><td class="num">{{ l.pack_cost|money }}</td><td class="num">{{ l.quantity|qty }} {{ l.product.unit }}</td><td class="num">{{ l.unit_cost|money }}</td><td class="num">{{ l.line_total|money }}</td></tr>
   {% endfor %}
   <tr><th colspan="6" class="num">Total</th><th class="num">{{ purchase.total|money }}</th></tr>
+  <tr><td colspan="6" class="num">Paid</td><td class="num">{{ purchase.amount_paid|money }}</td></tr>
+  {% if not purchase.is_cancelled %}<tr><th colspan="6" class="num">Still owed</th><th class="num">{{ purchase.balance|money }}</th></tr>{% endif %}
+</table></div>
+<h2>Payments to the supplier</h2>
+<table>
+  <tr><th>Date</th><th>Method</th><th class="num">Amount</th><th>Note</th><th>By</th></tr>
+  {% for pay in payments %}
+  <tr><td>{{ pay.date }}</td><td>{{ pay.get_method_display }}</td><td class="num">{{ pay.amount|money }}</td><td>{{ pay.note }}</td><td>{{ pay.user|default:"" }}</td></tr>
+  {% empty %}<tr><td colspan="5" class="muted">No payments recorded.</td></tr>
+  {% endfor %}
 </table>
+{% if not purchase.is_cancelled %}
+<div class="grid">
+  {% if purchase.balance > 0 %}
+  <form method="post" class="panel stacked">
+    {% csrf_token %}<input type="hidden" name="action" value="pay">
+    <h3 style="margin-top:0">Pay the supplier</h3>
+    <div class="form-grid">{% for f in pay_form %}<p>{{ f.label_tag }}{{ f }}{{ f.errors }}</p>{% endfor %}</div>
+    {{ pay_form.non_field_errors }}
+    <button class="btn primary">Record payment</button>
+  </form>
+  {% endif %}
+  {% if is_owner %}
+  <form method="post" class="panel stacked" onsubmit="return confirm('Cancel this purchase and take its stock off again?')">
+    {% csrf_token %}<input type="hidden" name="action" value="cancel">
+    <h3 style="margin-top:0">Cancel this purchase</h3>
+    <p class="muted">Use this if the purchase was entered by mistake or the goods went back. The stock it added comes off again. If some of it has already been sold, the cancel is refused.</p>
+    <div class="form-grid">{% for f in cancel_form %}<p>{{ f.label_tag }}{{ f }}{{ f.errors }}</p>{% endfor %}</div>
+    <button class="btn danger">Cancel purchase</button>
+  </form>
+  {% endif %}
+</div>
+{% endif %}
 {% endblock %}

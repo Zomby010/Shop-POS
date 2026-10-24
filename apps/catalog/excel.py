@@ -12,7 +12,7 @@ from apps.core.money import ZERO, q2, q3, to_decimal
 
 from .models import Category, Product, QuickPreset, QuickSaleCategory, StockMovement
 from .presets import PresetError, format_preset, parse_preset_list
-from .stock import record_movement
+from .stock import log_price_change, record_movement
 
 COLUMNS = [
     "Name", "Barcode", "Category", "Sold by", "Selling price", "Cost price",
@@ -219,6 +219,7 @@ def apply_rows(rows, user):
         v = row.values
         sold_by = SOLD_BY_ALIASES[v["Sold by"].lower()]
         product = Product.objects.get(pk=row.product_id) if row.product_id else Product()
+        old_cost, old_price = product.cost_price or ZERO, product.selling_price or ZERO
         product.name = v["Name"]
         if v.get("Barcode"):
             product.barcode = v["Barcode"]
@@ -235,6 +236,8 @@ def apply_rows(rows, user):
         if v.get("Quick-sale category"):
             product.quick_category, _ = QuickSaleCategory.objects.get_or_create(name=v["Quick-sale category"])
         product.save()
+        log_price_change(product, old_cost=old_cost, old_price=old_price, user=user,
+                         reason="Added from Excel" if row.action == "create" else "Updated from Excel")
         if row.presets:
             product.presets.all().delete()
             QuickPreset.objects.bulk_create(

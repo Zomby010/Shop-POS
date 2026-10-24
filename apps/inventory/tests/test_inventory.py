@@ -36,8 +36,10 @@ def test_purchase_rejects_fractional_pieces(clerk, soap):
 
 @pytest.mark.django_db
 def test_recount_and_loss(clerk, rice, soap):
-    moved = services.recount({rice: "48.5", soap: "24"}, user=clerk)
+    session, moved = services.recount({rice: ("48.5", "Normal loss"), soap: ("24", "")}, user=clerk)
     assert len(moved) == 1 and moved[0].quantity == Decimal("-1.500")
+    assert moved[0].reason == "Normal loss" and moved[0].reference == str(session)
+    assert moved[0].stock_after == Decimal("48.500") and moved[0].stock_before == Decimal("50.000")
     services.record_loss(rice, "0.5", user=clerk, reason="Spillage")
     rice.refresh_from_db()
     assert rice.stock_qty == Decimal("48.000")
