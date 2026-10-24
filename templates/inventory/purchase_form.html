@@ -10,18 +10,17 @@
   </div>
   <div class="panel">
     <p class="muted small">Loose goods can be received in packs: 2 sacks × 50 kg at KSh 9,000 a sack adds 100 kg at KSh 180/kg. For single items use 1 unit per pack.</p>
+    <div data-formset="{{ formset.prefix }}">
     {{ formset.management_form }}{{ formset.non_form_errors }}
     <table id="purchase-lines">
-      <tr><th>Product</th><th>Packs</th><th>Units per pack</th><th>Cost per pack (KSh)</th><th class="num">Adds</th><th class="num">Line total</th></tr>
-      {% for f in formset %}
-      <tr class="pl-row">
-        <td>{{ f.product }}{{ f.product.errors }}</td><td>{{ f.packs }}{{ f.packs.errors }}</td><td>{{ f.pack_size }}{{ f.pack_size.errors }}</td>
-        <td>{{ f.pack_cost }}{{ f.pack_cost.errors }}</td><td class="num pl-adds"></td><td class="num pl-total"></td>
-      </tr>
-      {% endfor %}
-      <tr><th colspan="5" class="num">Total</th><th class="num" id="pl-grand">0.00</th></tr>
+      <thead><tr><th>Product</th><th>Packs</th><th>Units per pack</th><th>Cost per pack (KSh)</th><th class="num">Adds</th><th class="num">Line total</th><th></th></tr></thead>
+      <tbody data-formset-body>{% for f in formset %}{% include "inventory/_purchase_row.html" %}{% endfor %}</tbody>
+      <tfoot><tr><th colspan="5" class="num">Total</th><th class="num" id="pl-grand">0.00</th><th></th></tr></tfoot>
     </table>
-    <p class="muted small">Need more rows? Save this purchase and start another.</p>
+    <template data-formset-template>{% include "inventory/_purchase_row.html" with f=formset.empty_form adding=True %}</template>
+    <div class="toolbar" style="margin-top:.6rem"><button type="button" class="btn" data-formset-add>+ Add line</button>
+      <span class="muted small">Not in the list? Choose "+ New product" at the bottom of the product list.</span></div>
+    </div>
   </div>
   <button class="btn primary big">Save purchase</button>
 </form>

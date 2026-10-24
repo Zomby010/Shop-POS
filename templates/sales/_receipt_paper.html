@@ -1,0 +1,11 @@
+<div class="receipt-paper paper-{{ shop.paper_width_mm }}{% if sale.status == 'voided' %} voided{% endif %}">
+  {% if shop.logo %}<img class="receipt-logo" src="{{ shop.logo.url }}" alt="">{% endif %}
+  {% for row in rows %}
+    {% if row.kind == "rule" %}<hr class="r-rule">
+    {% elif row.kind == "rule2" %}<hr class="r-rule thick">
+    {% elif row.kind == "gap" %}<div class="r-gap"></div>
+    {% else %}<div class="r-row r-{{ row.size }}{% if row.align == 'center' %} r-center{% endif %}{% if row.bold %} r-bold{% endif %}{% if row.muted %} r-muted{% endif %}">
+      <span>{{ row.left }}</span>{% if row.right %}<span class="r-right">{{ row.right }}</span>{% endif %}</div>
+    {% endif %}
+  {% endfor %}
+</div>

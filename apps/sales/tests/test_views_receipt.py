@@ -207,3 +207,19 @@ def test_item_list_filters_by_category(cashier_client, make_product):
     assert "Soda" in html and "Soap" not in html
     html = cashier_client.get("/sell/products/?category=none").content.decode()
     assert "Soap" in html and "Soda" not in html
+
+
+@pytest.mark.django_db
+def test_receipt_rows_style_the_header_and_total(monkeypatch, cashier, soap):
+    cart = services.current_cart(cashier)
+    services.add_to_cart(cart, soap)
+    sale = services.complete_sale(cart, user=cashier)
+    rows = receipt.receipt_rows(sale)
+    assert rows[0].size == "title" and rows[0].bold
+    total = next(r for r in rows if r.left == "TOTAL")
+    assert total.size == "tall" and total.right == "KSh 210.00"
+    device = Dummy()
+    device.close = lambda: None
+    monkeypatch.setattr(receipt, "open_printer", lambda shop: device)
+    receipt.print_receipt(sale)
+    assert b"\x1b!0" in device.output  # double width and height for the shop name

@@ -219,7 +219,7 @@ def receipt_view(request, pk):
     if sale.status in (Sale.Status.OPEN, Sale.Status.HELD):
         return redirect("sales:sell")
     return render(request, "sales/receipt.html", {
-        "sale": sale, "lines": receipt.receipt_lines(sale), "done": request.GET.get("done"),
+        "sale": sale, "rows": receipt.receipt_rows(sale), "done": request.GET.get("done"),
     })
 
 

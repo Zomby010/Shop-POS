@@ -1,0 +1,4 @@
+<tr class="dl-row" data-formset-row>{% for hidden in f.hidden_fields %}{{ hidden }}{% endfor %}
+  <td>{{ f.product }}</td><td>{{ f.description }}{{ f.description.errors }}</td><td>{{ f.quantity }}{{ f.quantity.errors }}</td>
+  <td>{{ f.unit }}</td><td>{{ f.unit_price }}{{ f.unit_price.errors }}</td><td class="num dl-amount"></td>
+  <td>{% if f.instance.pk %}{{ f.DELETE }}{% else %}<button type="button" class="btn small" data-formset-remove title="Remove line">✕</button>{% endif %}</td></tr>

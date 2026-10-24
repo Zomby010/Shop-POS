@@ -107,3 +107,26 @@ def test_pdf_has_business_name_and_logo(owner_client, tmp_path):
 @pytest.mark.django_db
 def test_cashier_cannot_open_documents(cashier_client):
     assert cashier_client.get("/documents/").status_code == 403
+
+
+@pytest.mark.django_db
+def test_added_and_removed_rows_save_correctly(owner_client):
+    """Rows added with "+ Add line" raise TOTAL_FORMS; a removed row arrives blank and is skipped."""
+    customer = Customer.objects.create(name="Hotel Amani")
+    response = owner_client.post("/documents/new/", doc_data(
+        customer=customer.pk, **{
+            "lines-TOTAL_FORMS": "3",
+            "lines-0-description": "Delivery", "lines-0-quantity": "1", "lines-0-unit_price": "300",
+            "lines-1-description": "", "lines-1-quantity": "", "lines-1-unit_price": "",
+            "lines-2-description": "Packing", "lines-2-quantity": "2", "lines-2-unit_price": "50",
+        },
+    ))
+    assert response.status_code == 302
+    assert [l.description for l in Document.objects.get().lines.all()] == ["Delivery", "Packing"]
+
+
+@pytest.mark.django_db
+def test_form_has_add_line_template(owner_client):
+    html = owner_client.get("/documents/new/?kind=quotation").content.decode()
+    assert "data-formset-add" in html and "lines-__prefix__-product" in html
+    assert "Save and edit again" not in html

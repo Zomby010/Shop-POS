@@ -1,0 +1,3 @@
+<tr data-formset-row>{% for hidden in p.hidden_fields %}{{ hidden }}{% endfor %}
+  <td>{{ p.text }}{{ p.text.errors }}</td><td>{{ p.label }}</td><td>{{ p.order }}</td><td>{{ p.hidden }}</td>
+  <td>{% if p.instance.pk %}{{ p.DELETE }}{% else %}<button type="button" class="btn small" data-formset-remove title="Remove">✕</button>{% endif %}</td></tr>

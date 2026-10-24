@@ -11,8 +11,7 @@
   <a class="btn primary big" id="next-sale" href="{% url 'sales:sell' %}" autofocus>New sale (Enter)</a>
 </div>
 {% if done and sale.change_given %}<div class="panel no-print" style="font-size:1.6rem"><strong>Change: KSh {{ sale.change_given }}</strong></div>{% endif %}
-<pre class="receipt-preview">{% if shop.logo %}<img src="{{ shop.logo.url }}" alt="" style="max-height:60px;display:block;margin:0 auto 6px">{% endif %}{% for line in lines %}{{ line }}
-{% endfor %}</pre>
+{% include "sales/_receipt_paper.html" %}
 {% endblock %}
 {% block scripts %}<script>
 document.getElementById("next-sale").focus();

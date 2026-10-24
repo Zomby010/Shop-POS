@@ -29,7 +29,6 @@ dialog::backdrop { background: rgba(16, 24, 40, .45); }
 .pay-grid label, #pay-customer label { display: flex; flex-direction: column; gap: .2rem; font-weight: 600; }
 .pay-grid input { font-size: 1.3rem; }
 .pay-summary { display: flex; justify-content: space-between; font-size: 1.2rem; }
-.receipt-preview { background: #fff; border: 1px dashed var(--line); padding: 1rem; width: max-content; max-width: 100%; margin: 0 auto; font-size: 13px; line-height: 1.35; overflow-x: auto; }
 .item-filter { display: flex; gap: .4rem; margin-bottom: .5rem; }
 .item-filter input { flex: 1; min-width: 0; }
 .item-list { max-height: calc(100vh - 260px); min-height: 240px; overflow-y: auto; border: 1px solid var(--line); border-radius: 6px; }
