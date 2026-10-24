@@ -76,12 +76,14 @@
     const given = cash.value === "" ? due : num(cash);
     document.getElementById("pay-change").textContent = money(Math.max(given - due, 0));
     document.getElementById("pay-customer").hidden = num(credit) <= 0;
+    document.getElementById("pay-mpesa-code-row").hidden = num(mpesa) <= 0;
   }
   function setMode(mode) {
     const total = cartTotal();
     mpesa.value = mode === "mpesa" ? total : "";
     credit.value = mode === "credit" ? total : "";
     cash.value = "";
+    document.getElementById("pay-mpesa-code").value = "";
     updatePay();
     ({ cash, mpesa: cash, split: mpesa, credit: credit })[mode].focus();
   }

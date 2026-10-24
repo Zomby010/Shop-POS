@@ -1,7 +1,11 @@
-<div class="toolbar">
-  <a class="btn {% if tab == 'profit' %}primary{% endif %}" href="{% url 'finance:reports' %}">Profit</a>
-  <a class="btn {% if tab == 'sales' %}primary{% endif %}" href="{% url 'finance:sales' %}">Sales report</a>
-  <a class="btn {% if tab == 'products' %}primary{% endif %}" href="{% url 'finance:products' %}">Best and slow sellers</a>
+<div class="toolbar report-tabs">
+  <a class="btn {% if tab == 'summary' %}primary{% endif %}" href="{% url 'finance:reports' %}">Summary</a>
+  <a class="btn {% if tab == 'profit' %}primary{% endif %}" href="{% url 'finance:profit' %}">Profit and loss</a>
+  <a class="btn {% if tab == 'sales' %}primary{% endif %}" href="{% url 'finance:sales' %}">Sales by day</a>
+  <a class="btn {% if tab == 'products' %}primary{% endif %}" href="{% url 'finance:products' %}">Sold items</a>
+  <a class="btn {% if tab == 'movers' %}primary{% endif %}" href="{% url 'finance:movers' %}">Fast and slow</a>
+  <a class="btn {% if tab == 'movement' %}primary{% endif %}" href="{% url 'finance:stock_movement' %}">Stock movement</a>
+  <a class="btn {% if tab == 'purchased' %}primary{% endif %}" href="{% url 'finance:purchased' %}">Purchased items</a>
   <a class="btn {% if tab == 'stock' %}primary{% endif %}" href="{% url 'finance:stock_value' %}">Stock value</a>
   <a class="btn {% if tab == 'expenses' %}primary{% endif %}" href="{% url 'finance:expenses' %}">Expenses</a>
   <a class="btn" href="{% url 'sales:cashup_list' %}">Cash-ups</a>

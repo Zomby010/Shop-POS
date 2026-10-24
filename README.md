@@ -141,13 +141,23 @@ Stock in the top bar (owners and stock clerks).
 - **Invoices and quotations** (owner): prepare them for a customer, a supplier or a one-off name. Tick **Bulk order** and product lines with a blank price take the bulk tier price for their quantity. Lines can also be free text (delivery, services).
 - Each document is numbered (INV-0001, QUO-0001) and opens as a PDF with the business name and logo from Settings, ready to print, save or send. A quotation converts into an invoice in one click, and invoices track payments (draft, sent, partly paid, paid).
 
-### Money and reports
+### Sales
 
-Owner only, under **Money & reports**. Every report has a date range and an **Export to Excel** button.
+**Sales** in the top bar. Every completed or voided sale with its time, number of items, total, how it was paid (cash, M-Pesa with its code, deni), refunds, customer, cashier and status (Paid, On deni, Part refunded, Voided). Pick Today, Yesterday, this or last week, month or year, or any dates. Filter by payment (cash only, M-Pesa only, on deni, split) and status, and the owner can filter by cashier. Search by receipt number (any date), customer or M-Pesa code. Totals for cash, M-Pesa and deni sit above the list, and **Download Excel** saves the filtered list. Open a sale to refund items or void it. Cashiers see only their own sales.
 
-- **Profit:** net sales (after refunds), cost of goods sold at the cost when each item was sold, gross profit and margin, expenses, stock loss (wastage plus count differences) and net profit, by day and in total.
-- **Sales report:** sales per day split into cash, M-Pesa and deni, with refunds and voids.
-- **Best and slow sellers:** by revenue for the period, with quantity and gross profit; the Excel file lists every product.
+At checkout, an optional **M-Pesa code** box appears when part of the sale is paid by M-Pesa. The code prints on the receipt so sales can be matched to the M-Pesa statement.
+
+### Reports
+
+Owner only, under **Reports**. Every report shares the same period buttons (Today, Yesterday, This/Last week, This/Last month, This/Last year) or dates, and a **Download Excel** button.
+
+- **Summary:** net sales, number of sales, average sale and gross profit; how customers paid (cash, M-Pesa, deni); money collected (from sales after refunds plus deni repaid, split into cash and M-Pesa); deni given, repaid and owed now; cost of goods, expenses, stock loss and net profit; bought from, paid to and owed to suppliers.
+- **Profit and loss:** net sales (after refunds), cost of goods sold at the cost when each item was sold, gross profit and margin, expenses, stock loss (wastage plus count differences) and net profit, by day and in total.
+- **Sales by day:** sales per day split into cash, M-Pesa and deni, with refunds and voids.
+- **Sold items:** each item sold with quantity, cost, revenue, margin and margin %, sortable and by category. The margins add up to the Summary's gross profit.
+- **Fast and slow:** every product as fast, slow or not selling, with total sold, average per day over every day of the period, revenue, margin and how many days current stock will last.
+- **Stock movement:** per item, opening, new stock, purchased, converted in and out, sold, returned, losses, count changes and closing, with unit cost and value. Opening covers everything before the start date, so each row always adds up.
+- **Purchased items:** what was bought from suppliers, with quantity, cost, average unit cost and suppliers. Cancelled purchases, conversions and opening stock are left out.
 - **Stock value:** stock at cost and at selling price by category.
 - **Expenses:** rent, electricity, transport, wages and so on. Cash expenses from the drawer come off the expected cash at cash-up.
 - **Backup:** run a backup now, download past ones, and restore instructions. Backups are zip files with the database and logo; the last 30 (configurable) are kept.

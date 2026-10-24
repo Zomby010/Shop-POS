@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load shop_tags %}
+{% block title %}Fast and slow movers{% endblock %}
+{% block content %}
+{% include "finance/_nav.html" %}
+<h1>Fast and slow movers</h1>
+<p class="muted">Average per day is the total sold divided by all {{ days }} day{{ days|pluralize }} in the period, including days with no sales. Use it with days of stock left to decide what to reorder.</p>
+{% include "finance/_range.html" %}
+<form class="toolbar" method="get">
+  <input type="hidden" name="start" value="{{ start }}"><input type="hidden" name="end" value="{{ end }}">
+  <select name="speed">
+    <option value="">All products</option>
+    <option value="fast"{% if speed == "fast" %} selected{% endif %}>Fast moving</option>
+    <option value="slow"{% if speed == "slow" %} selected{% endif %}>Slow moving</option>
+    <option value="none"{% if speed == "none" %} selected{% endif %}>Not selling</option>
+  </select>
+  <input type="search" name="q" value="{{ q }}" placeholder="Search item">
+  <button class="btn">Apply</button>
+</form>
+<div class="table-wrap"><table>
+  <tr><th>Product</th><th>Speed</th><th class="num">Total sold</th><th class="num">Per day</th><th class="num">Revenue</th><th class="num">Margin</th><th class="num">In stock</th><th class="num">Stock lasts</th></tr>
+  {% for r in rows %}
+  <tr><td>{{ r.product.name }}</td>
+    <td>{% if r.speed == "fast" %}<span class="badge ok">Fast</span>{% elif r.speed == "slow" %}<span class="badge warn">Slow</span>{% else %}<span class="badge muted">Not selling</span>{% endif %}</td>
+    <td class="num">{{ r.quantity|qty }} {{ r.product.unit }}</td><td class="num">{{ r.per_day|floatformat:"-2" }}</td>
+    <td class="num">{{ r.revenue|money }}</td><td class="num">{{ r.profit|money }}</td>
+    <td class="num">{{ r.product.stock_qty|qty }} {{ r.product.unit }}</td>
+    <td class="num">{% if r.days_left is None %}<span class="muted">—</span>{% elif r.days_left < 7 %}<span class="badge danger">{{ r.days_left|floatformat:0 }} days</span>{% else %}{{ r.days_left|floatformat:0 }} days{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="8" class="muted">No products match.</td></tr>
+  {% endfor %}
+</table></div>
+<p class="muted small">Fast is the top fifth of products that sold, ranked by sales value; slow is the rest that sold.</p>
+{% endblock %}

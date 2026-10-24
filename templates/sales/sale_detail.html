@@ -6,8 +6,9 @@
   <h1 style="margin:0">{{ sale.receipt_no }}</h1>
   {% if sale.status == "voided" %}<span class="badge danger">Voided</span>{% endif %}
   <span class="muted">{{ sale.completed_at|date:"d M Y H:i" }} · {{ sale.cashier }}{% if sale.customer %} · deni: {{ sale.customer.name }}{% endif %}</span>
-  <span class="spacer"></span><a class="btn" href="{% url 'sales:receipt' sale.pk %}">Receipt</a>
+  <span class="spacer"></span><a class="btn" href="{% url 'sales:history' %}">All sales</a><a class="btn" href="{% url 'sales:receipt' sale.pk %}">Receipt</a>
 </div>
+<p>Total <strong>{{ sale.total|money }}</strong> · paid by {% for p in payments %}{{ p.get_method_display }} {{ p.amount|money }}{% if p.reference %} ({{ p.reference }}){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}{% if sale.change_given %} · change {{ sale.change_given|money }}{% endif %}</p>
 {% if sale.status == "completed" %}
 <form method="post" class="panel">
   {% csrf_token %}

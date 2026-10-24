@@ -2,7 +2,9 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Prefetch, Q
+from django.contrib.auth import get_user_model
+from django.db.models import Case, Count, DecimalField, Exists, OuterRef, Prefetch, Q, Subquery, Sum, When
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -10,17 +12,21 @@ from django.views.decorators.http import require_POST
 
 from apps.catalog.models import Category, Product, QuickPreset, QuickSaleCategory
 from apps.core.audit import verify_owner_pin
+from apps.core.excel import xlsx_response
 from apps.core.forms import ShopSettingsForm
 from apps.core.models import ShopSettings
 from apps.core.money import ZERO, to_decimal
 from apps.core.roles import CASHIER, is_owner, owner_required, role_required
+from apps.finance import reports
 from apps.partners.models import Customer
 
 from . import receipt, services
-from .models import CashUp, Refund, Sale
+from .models import CashUp, Payment, Refund, Sale, SaleLine
 from .services import SaleError
 
 seller_required = role_required(CASHIER)
+User = get_user_model()
+MONEY = DecimalField(max_digits=12, decimal_places=2)
 
 
 def _approver(request):
@@ -186,6 +192,7 @@ def pay(request):
         sale = services.complete_sale(
             cart, user=request.user, cash_tendered=request.POST.get("cash") or None,
             mpesa=request.POST.get("mpesa"), credit=credit, customer=customer,
+            mpesa_code=request.POST.get("mpesa_code", ""),
         )
     except SaleError as exc:
         response = HttpResponse(f'<p class="errorlist">{exc}</p>')
@@ -235,20 +242,94 @@ def reprint(request, pk):
     return redirect("sales:receipt", pk=sale.pk)
 
 
-@seller_required
-def history(request):
-    qs = Sale.objects.filter(status__in=[Sale.Status.COMPLETED, Sale.Status.VOIDED]).select_related("cashier", "customer")
-    day = request.GET.get("day") or timezone.localdate().isoformat()
+def _paid(method):
+    rows = Payment.objects.filter(sale=OuterRef("pk"), method=method).values("sale").annotate(t=Sum("amount"))
+    return Coalesce(Subquery(rows.values("t")), ZERO, output_field=MONEY)
+
+
+def _sales_list(request):
+    """Completed and voided sales for the Sales page, filtered by the query string, with payment columns."""
+    start, end = reports.parse_range(request)
+    lo, hi = reports.day_bounds(start, end)
+    refunded = Refund.objects.filter(sale=OuterRef("pk")).values("sale").annotate(t=Sum("total")).values("t")
+    items = SaleLine.objects.filter(sale=OuterRef("pk")).values("sale").annotate(n=Count("id")).values("n")
+    codes = Payment.objects.filter(sale=OuterRef("pk"), method=Payment.Method.MPESA).exclude(reference="")
+    qs = (Sale.objects.filter(status__in=[Sale.Status.COMPLETED, Sale.Status.VOIDED])
+          .select_related("cashier", "customer")
+          .annotate(cash=_paid(Payment.Method.CASH), mpesa=_paid(Payment.Method.MPESA),
+                    credit=_paid(Payment.Method.CREDIT),
+                    refunded=Coalesce(Subquery(refunded), ZERO, output_field=MONEY),
+                    item_count=Coalesce(Subquery(items), 0),
+                    mpesa_code=Subquery(codes.values("reference")[:1])))
     term = (request.GET.get("q") or "").strip()
-    if term:
-        number = term.upper().lstrip("R").lstrip("0")
-        qs = qs.filter(Q(number=int(number)) if number.isdigit() else Q(customer__name__icontains=term))
+    number = term.upper().lstrip("R").lstrip("0")
+    if term and number.isdigit():
+        qs = qs.filter(number=int(number))  # a receipt number finds the sale on any date
     else:
-        qs = qs.filter(completed_at__date=day)
+        qs = qs.filter(completed_at__gte=lo, completed_at__lt=hi)
+        if term:
+            qs = qs.filter(Q(customer__name__icontains=term) | Q(Exists(codes.filter(reference__icontains=term))))
+    method = request.GET.get("method", "")
+    if method == "cash":
+        qs = qs.filter(cash__gt=0, mpesa=0, credit=0)
+    elif method == "mpesa":
+        qs = qs.filter(mpesa__gt=0, cash=0, credit=0)
+    elif method == "credit":
+        qs = qs.filter(credit__gt=0)
+    elif method == "split":
+        qs = qs.annotate(methods=Case(When(cash__gt=0, then=1), default=0) + Case(When(mpesa__gt=0, then=1), default=0)
+                         + Case(When(credit__gt=0, then=1), default=0)).filter(methods__gt=1)
+    status = request.GET.get("status", "")
+    if status == "voided":
+        qs = qs.filter(status=Sale.Status.VOIDED)
+    elif status == "refunded":
+        qs = qs.filter(status=Sale.Status.COMPLETED, refunded__gt=0)
+    elif status == "paid":
+        qs = qs.filter(status=Sale.Status.COMPLETED, refunded=0)
     if not is_owner(request.user):
         qs = qs.filter(cashier=request.user)
-    page = Paginator(qs.order_by("-completed_at").prefetch_related("payments"), 50).get_page(request.GET.get("page"))
-    return render(request, "sales/history.html", {"page": page, "day": day, "q": term})
+    elif request.GET.get("cashier"):
+        qs = qs.filter(cashier_id=request.GET["cashier"])
+    return start, end, term, qs.order_by("-completed_at")
+
+
+@seller_required
+def history(request):
+    """The Sales page: every sale in a period with how it was paid, refunds, deni and totals."""
+    start, end, term, qs = _sales_list(request)
+    if request.GET.get("format") == "xlsx":
+        header = ["Receipt", "Date and time", "Items", "Total", "Cash", "M-Pesa", "M-Pesa code", "Deni", "Refunded",
+                  "Net", "Customer", "Cashier", "Status"]
+        rows = [[s.receipt_no, timezone.localtime(s.completed_at).replace(tzinfo=None), s.item_count, s.total, s.cash,
+                 s.mpesa, s.mpesa_code or "", s.credit, s.refunded, s.total - s.refunded,
+                 s.customer.name if s.customer else "", str(s.cashier), _sale_status(s)] for s in qs]
+        return xlsx_response(f"sales-{start}-to-{end}", "Sales", header, rows)
+    ids = qs.values("pk")
+    totals = {"cash": 0, "mpesa": 0, "credit": 0, **{
+        r["method"]: r["t"] for r in Payment.objects.filter(sale__in=ids).values("method").annotate(t=Sum("amount"))}}
+    totals.update(Sale.objects.filter(pk__in=ids).aggregate(count=Count("id"), total=Coalesce(Sum("total"), ZERO)))
+    totals["refunded"] = Refund.objects.filter(sale__in=ids).aggregate(t=Coalesce(Sum("total"), ZERO))["t"]
+    totals["net"] = totals["total"] - totals["refunded"]
+    page = Paginator(qs, 50).get_page(request.GET.get("page"))
+    for sale in page:
+        sale.state = _sale_status(sale)
+    params = request.GET.copy()
+    params.pop("page", None)
+    return render(request, "sales/history.html", {
+        "page": page, "q": term, "totals": totals, "start": start.isoformat(), "end": end.isoformat(),
+        "periods": reports.PERIODS, "period": request.GET.get("period", ""), "method": request.GET.get("method", ""),
+        "status": request.GET.get("status", ""), "cashier": request.GET.get("cashier", ""),
+        "cashiers": User.objects.filter(sales__isnull=False).distinct().order_by("username") if is_owner(request.user) else [],
+        "query": params.urlencode(),
+    })
+
+
+def _sale_status(sale):
+    if sale.status == Sale.Status.VOIDED:
+        return "Voided"
+    if sale.refunded:
+        return "Part refunded"
+    return "On deni" if sale.credit else "Paid"
 
 
 @seller_required

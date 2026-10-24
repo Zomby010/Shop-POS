@@ -100,7 +100,8 @@ def receipt_rows(sale, shop=None, reprint=False):
     if payments:
         rows.append(Row("PAID BY", bold=True, muted=True))
         for payment in payments:
-            rows.append(Row(f"  {payment.get_method_display()}", _money(payment.amount)))
+            label = f"{payment.get_method_display()} {payment.reference}".strip()
+            rows.append(Row(f"  {label}", _money(payment.amount)))
     if sale.amount_tendered and sale.paid_by(Payment.Method.CASH):
         rows.append(Row("  Cash given", _money(sale.amount_tendered)))
         rows.append(Row("  Change", _money(sale.change_given), bold=True))

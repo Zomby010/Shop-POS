@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% load shop_tags %}
-{% block title %}Profit{% endblock %}
+{% block title %}Profit and loss{% endblock %}
 {% block content %}
 {% include "finance/_nav.html" %}
-<h1>Profit {% if start == end %}for {{ report.start|date:"D d M Y" }}{% else %}{{ report.start|date:"d M" }} to {{ report.end|date:"d M Y" }}{% endif %}</h1>
+<h1>Profit and loss {% if start == end %}for {{ report.start|date:"D d M Y" }}{% else %}{{ report.start|date:"d M" }} to {{ report.end|date:"d M Y" }}{% endif %}</h1>
 {% include "finance/_range.html" %}
 <div class="grid">
   <div class="stat"><div class="label">Net sales</div><div class="value">{{ total.net_sales|money }}</div><div class="muted small">{{ total.sales|money }} sales − {{ total.refunds|money }} refunds</div></div>
