@@ -10,8 +10,9 @@
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' data-quick-add="{{ quick_add_kinds|default:'' }}">
 {% if user.is_authenticated %}
 <header class="topbar">
-  <a class="brand" href="{% url 'dashboard' %}">{% if shop.logo %}<img src="{{ shop.logo.url }}" alt="">{% endif %}{{ shop.business_name }}</a>
-  <nav>
+  <a class="brand" href="{% url 'dashboard' %}">{% if shop.logo %}<img src="{{ shop.logo.url }}" alt="">{% endif %}<span>{{ shop.business_name }}</span></a>
+  <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="main-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+  <nav id="main-nav">
     {% with s=request.resolver_match.namespace %}
     {% with u=request.resolver_match.url_name %}
     {% if can_sell %}<a href="{% url 'sales:sell' %}" class="{% if s == 'sales' and u != 'history' and u != 'sale_detail' %}active{% endif %}">Sell</a>
@@ -40,6 +41,7 @@
 <script src="{% static 'js/htmx.min.js' %}"></script>
 <script src="{% static 'js/quick-add.js' %}"></script>
 <script src="{% static 'js/formset.js' %}"></script>
+<script src="{% static 'js/app.js' %}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

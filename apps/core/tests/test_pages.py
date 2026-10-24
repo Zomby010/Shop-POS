@@ -18,3 +18,10 @@ def test_product_edit_page_renders(owner_client, rice):
     response = owner_client.get(f"/products/{rice.pk}/")
     assert response.status_code == 200
     assert b"1/4 kg" in response.content
+
+
+@pytest.mark.django_db
+def test_phone_menu_and_pay_bar_are_on_the_page(owner_client):
+    content = owner_client.get("/").content.decode()
+    assert 'class="nav-toggle"' in content and "js/app.js" in content
+    assert 'id="mobile-pay"' in owner_client.get("/sell/").content.decode()

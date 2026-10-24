@@ -8,6 +8,21 @@
   const money = (n) => (Math.round(n * 100) / 100).toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const num = (el) => parseFloat((el.value || "0").replace(/,/g, "")) || 0;
   const cartTotal = () => parseFloat(document.querySelector("#cart .cart")?.dataset.total || "0");
+  // On phones and tablets, focusing the scan box pops up the keyboard over the cart, so only do it with a real keyboard.
+  const touch = window.matchMedia("(pointer: coarse)").matches;
+  const focusScan = () => { if (!touch) scan.focus(); };
+  window.focusScan = focusScan;
+  if (touch) scan.removeAttribute("autofocus");
+
+  // Phone pay bar: keeps the total and Pay in reach while scrolling the item list
+  const payBar = document.getElementById("mobile-pay");
+  function updatePayBar() {
+    const lines = parseInt(document.querySelector("#cart .cart")?.dataset.lines || "0", 10);
+    payBar.hidden = !lines;
+    document.getElementById("mobile-pay-count").textContent = lines === 1 ? "1 item" : `${lines} items`;
+    document.getElementById("mobile-pay-total").textContent = `KSh ${money(cartTotal())}`;
+  }
+  updatePayBar();
 
   // Quick-sale tabs (click or F1..F8)
   function showTab(index) {
@@ -98,14 +113,16 @@
   payDialog.querySelectorAll("[data-pay-mode]").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.payMode)));
 
   document.addEventListener("click", (e) => {
-    if (e.target.closest("#pay-btn")) openPay();
+    if (e.target.closest("#pay-btn, #mobile-pay")) openPay();
     if (e.target.closest("#hold-btn")) hold();
-    if (e.target.closest("[data-close]")) { e.target.closest("dialog").close(); scan.focus(); }
+    if (e.target.closest("[data-close]")) { e.target.closest("dialog").close(); focusScan(); }
   });
 
   // After the cart changes, keep the scanner ready
   document.body.addEventListener("htmx:afterSwap", (e) => {
-    if (e.detail.target.id === "cart" && !payDialog.open && !customDialog.open) scan.focus();
+    if (e.detail.target.id !== "cart") return;
+    updatePayBar();
+    if (!payDialog.open && !customDialog.open) focusScan();
   });
 
   document.addEventListener("keydown", (e) => {
